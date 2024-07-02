@@ -16,17 +16,25 @@ public abstract class NewsScanner {
     public static final String A_TAG = "a";
 
     abstract String getBaseUrl();
+
     abstract String getDomain();
 
     Optional<Document> getDocument(String url, ChromeDriver chromeDriver) {
 
         try {
             chromeDriver.get(url);
+            int retryTimes = 1000;
+            while (chromeDriver.getTitle().contains("Bad gateway")) {
+                retryTimes = retryTimes + 400 + (retryTimes / 100);
+                Thread.sleep(retryTimes);
+                chromeDriver.get(url);
+            }
+            Thread.sleep(retryTimes / 50);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
 
-        if( chromeDriver.getPageSource().isEmpty()){
+        if (chromeDriver.getPageSource().isEmpty()) {
             return Optional.empty();
         }
 

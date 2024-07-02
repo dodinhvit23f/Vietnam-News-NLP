@@ -8,13 +8,20 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.math.BigInteger;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +32,8 @@ public class VinMecNewsScanner extends NewsScanner {
     public static final String PAGE = "?page=";
     ChromeDriver chromeDriver;
     NewsRepository newsRepository;
-    Set<String> queue = ConcurrentHashMap.newKeySet();
+    Queue<String> queue = new ConcurrentLinkedQueue<>();
+    MongoTemplate mongoTemplate;
 
     @Override
     String getBaseUrl() {
@@ -39,9 +47,11 @@ public class VinMecNewsScanner extends NewsScanner {
     }
 
     public void scanWeb() {
-        scanByUrl("https://www.vinmec.com/vi/tin-tuc/?page=2");
-        queue.forEach(this::scanByUrl);
-        //scanByUrl("https://www.vinmec.com/vi/tin-tuc/");
+        //scanByUrl(getBaseUrl().concat("/vi/"));
+        scanByUrl("https://www.vinmec.com/vi/tin-tuc/?page=3");
+        while (!queue.isEmpty()){
+            scanByUrl(queue.poll());
+        }
     }
 
     public void scanByUrl(String url) {
@@ -54,7 +64,8 @@ public class VinMecNewsScanner extends NewsScanner {
             return;
         }
 
-        if (newsRepository.findByUrl(url).isPresent()) {
+        String cutUrl = url.split("\\?")[0];
+        if (newsRepository.findByUrl(cutUrl).isPresent()) {
             return;
         }
 
@@ -75,12 +86,39 @@ public class VinMecNewsScanner extends NewsScanner {
         Set<String> scanUrlSet = document.select(NewsScanner.A_TAG)
                 .stream()
                 .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
+                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
+                .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith(PAGE))
+                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().startsWith(PAGE.concat("1")))
+                .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue().strip())
+                .map(path -> {
+                    if (!path.contains(PAGE)) {
+                        return path.concat(path);
+                    }
+
+                    String[] currentUrlPath = url.split("\\?page=");
+                    String[] urlPath = path.split("\\?page=");
+
+                    if (currentUrlPath.length == 2 &&
+                            urlPath.length == 2 &&
+                            Integer.parseInt(currentUrlPath[1]) < Integer.parseInt(urlPath[1])) {
+                        return currentUrlPath[0].concat(path);
+                    }
+
+                    return null;
+                })
+                .filter(link -> !ObjectUtils.isEmpty(link))
+                .collect(Collectors.toSet());
+
+
+        scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
+                .stream()
+                .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
                 .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith("/"))
                 .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
                 .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue().strip())
                 .filter(path -> !ObjectUtils.isEmpty(path) && path.length() > 1)
                 .map(path -> getBaseUrl().concat(path))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet()));
 
 
         scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
@@ -91,31 +129,24 @@ public class VinMecNewsScanner extends NewsScanner {
                 .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue())
                 .collect(Collectors.toSet()));
 
-        scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
-                .stream()
-                .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
-                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
-                .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith(PAGE))
-                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().startsWith(PAGE.concat("1")))
-                .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue().strip())
-                .map(path -> {
-                    if(!url.contains(PAGE)){
-                        return url.concat(path);
-                    }
-
-                    String[] urlPath = url.split("\\?page=");
-
-                    return urlPath[0].concat(path);
-                })
-                .collect(Collectors.toSet()));
-
-        queue.addAll(scanUrlSet);
+        scanUrlSet.stream()
+                .filter(link -> !queue.contains(link))
+                .forEach(queue::add);
     }
 
     public News saveNews(Document document, String url) {
-        url = url.split("\\?")[0];
+
         String content = document.select(".block-content").text();
-        if(ObjectUtils.isEmpty(content)){
+
+        if (ObjectUtils.isEmpty(content)) {
+            content = document.select(".content").text();
+        }
+
+        if (ObjectUtils.isEmpty(content)) {
+            content = document.select("#profile").text();
+        }
+
+        if (ObjectUtils.isEmpty(content)) {
             return null;
         }
 

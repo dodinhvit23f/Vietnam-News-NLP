@@ -72,6 +72,7 @@ public class ApplicationConfiguration {
         //  options.add_experimental_option('useAutomationExtension', False);
         // đặt ngôn ngữ việt công cụ
         options.addArguments("--lang=vi");
+        options.addArguments("--disable-web-security");
         // tạo nơi lưu trữ thông tin user-cookie
         //options.addArguments("user-data-dir=C:\\User\\Admin\\AppData\\Google\\Chrome\\User Data\\")
         // loại bỏ các bảo vệ của chrome, và thông báo software auto ....
