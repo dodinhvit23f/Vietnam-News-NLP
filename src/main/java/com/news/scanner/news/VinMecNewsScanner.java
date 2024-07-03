@@ -151,6 +151,11 @@ public class VinMecNewsScanner extends NewsScanner {
         if (ObjectUtils.isEmpty(content)) {
             return null;
         }
+        url = url.substring(0,url.lastIndexOf('/') + 1);
+
+        if(newsRepository.findByUrl(url).isPresent()){
+            return null;
+        }
 
         News news = News.builder()
                 .title(document.title())
@@ -162,6 +167,7 @@ public class VinMecNewsScanner extends NewsScanner {
 
         return newsRepository.save(news);
     }
+
 
 
 }
