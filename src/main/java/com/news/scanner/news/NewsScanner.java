@@ -4,8 +4,9 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
-import reactor.core.publisher.Mono;
+import org.springframework.util.ObjectUtils;
 
 import java.util.Optional;
 
@@ -29,7 +30,9 @@ public abstract class NewsScanner {
                 Thread.sleep(retryTimes);
                 chromeDriver.get(url);
             }
-            Thread.sleep(retryTimes / 50);
+            if(ObjectUtils.isEmpty(chromeDriver.findElement(By.id("main")))){
+                Thread.sleep(retryTimes / 50);
+            };
         } catch (Exception e) {
             log.error(e.getMessage());
         }

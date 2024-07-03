@@ -9,20 +9,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import java.math.BigInteger;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
+import  java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -32,6 +30,7 @@ public class VinMecNewsScanner extends NewsScanner {
     public static final String PAGE = "?page=";
     ChromeDriver chromeDriver;
     NewsRepository newsRepository;
+    Set<String> crawledLink = ConcurrentHashMap.newKeySet();
     Queue<String> queue = new ConcurrentLinkedQueue<>();
     MongoTemplate mongoTemplate;
 
@@ -47,10 +46,10 @@ public class VinMecNewsScanner extends NewsScanner {
     }
 
     public void scanWeb() {
-        //scanByUrl(getBaseUrl().concat("/vi/"));
-        scanByUrl("https://www.vinmec.com/vi/tin-tuc/?page=3");
+        scanByUrl(getBaseUrl().concat("/vi/"));
+        //scanByUrl("https://www.vinmec.com/vi/tin-tuc/thong-tin-suc-khoe/san-phu-khoa-va-ho-tro-sinh-san/tranh-thai-tu-nhien-bang-cach-tinh-ngay-rung-trung/");
         while (!queue.isEmpty()){
-            scanByUrl(queue.poll());
+               scanByUrl(queue.poll());
         }
     }
 
@@ -131,7 +130,11 @@ public class VinMecNewsScanner extends NewsScanner {
 
         scanUrlSet.stream()
                 .filter(link -> !queue.contains(link))
-                .forEach(queue::add);
+                .filter(link -> !crawledLink.contains(link))
+                .forEach(link -> {
+                    queue.add(link);
+                    crawledLink.add(link);
+                });
     }
 
     public News saveNews(Document document, String url) {
