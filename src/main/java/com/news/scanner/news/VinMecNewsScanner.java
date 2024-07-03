@@ -115,16 +115,15 @@ public class VinMecNewsScanner extends NewsScanner {
                 .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
                 .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue().strip())
                 .filter(path -> !ObjectUtils.isEmpty(path) && path.length() > 1)
-                .map(path -> getBaseUrl().concat(path))
+                .map(path -> getVinMecUrl(getBaseUrl().concat(path)))
                 .collect(Collectors.toSet()));
-
 
         scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
                 .stream()
                 .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
                 .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith("https://www.vinmec.com"))
                 .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
-                .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue())
+                .map(aTag -> getVinMecUrl(aTag.attribute(NewsScanner.HREF).getValue()))
                 .collect(Collectors.toSet()));
 
         scanUrlSet.stream()
@@ -151,11 +150,6 @@ public class VinMecNewsScanner extends NewsScanner {
         if (ObjectUtils.isEmpty(content)) {
             return null;
         }
-        url = url.substring(0,url.lastIndexOf('/') + 1);
-
-        if(newsRepository.findByUrl(url).isPresent()){
-            return null;
-        }
 
         News news = News.builder()
                 .title(document.title())
@@ -168,6 +162,9 @@ public class VinMecNewsScanner extends NewsScanner {
         return newsRepository.save(news);
     }
 
+    private static String getVinMecUrl(String url) {
+        return url.substring(0, url.lastIndexOf('/') + 1);
+    }
 
 
 }
