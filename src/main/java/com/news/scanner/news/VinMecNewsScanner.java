@@ -32,7 +32,6 @@ public class VinMecNewsScanner extends NewsScanner {
     NewsRepository newsRepository;
     Set<String> crawledLink = ConcurrentHashMap.newKeySet();
     Queue<String> queue = new ConcurrentLinkedQueue<>();
-    MongoTemplate mongoTemplate;
 
     @Override
     String getBaseUrl() {
@@ -139,10 +138,10 @@ public class VinMecNewsScanner extends NewsScanner {
 
     public News saveNews(Document document, String url) {
 
-        String content = document.select(".block-content").text();
+        String content = document.select(".block-content.cms.pageview-highest").text();
 
         if (ObjectUtils.isEmpty(content)) {
-            content = document.select(".content").text();
+            content = document.select(".content.col-xs-12.col-md-8.no-paddings-sm").text();
         }
 
         if (ObjectUtils.isEmpty(content)) {
