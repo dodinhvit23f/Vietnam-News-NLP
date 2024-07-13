@@ -45,8 +45,9 @@ public class VinMecNewsScanner extends NewsScanner {
     }
 
     public void scanWeb() {
-        scanByUrl(getBaseUrl().concat("/vi/"));
-        //scanByUrl("https://www.vinmec.com/vi/tin-tuc/thong-tin-suc-khoe/san-phu-khoa-va-ho-tro-sinh-san/tranh-thai-tu-nhien-bang-cach-tinh-ngay-rung-trung/");
+        String url = getBaseUrl().concat("/vi/");
+        crawledLink.add(url);
+        queue.add(url);
         while (!queue.isEmpty()){
                scanByUrl(queue.poll());
         }
@@ -77,7 +78,7 @@ public class VinMecNewsScanner extends NewsScanner {
 
         Optional<News> news = newsRepository.findByUrl(url);
         if (news.isEmpty()) {
-            saveNews(document, url);
+            saveNews(document, getVinMecUrl(chromeDriver.getCurrentUrl()));
         }
 
 
@@ -133,6 +134,7 @@ public class VinMecNewsScanner extends NewsScanner {
                     queue.add(link);
                     crawledLink.add(link);
                 });
+        crawledLink.add(chromeDriver.getCurrentUrl());
     }
 
     public News saveNews(Document document, String url) {
@@ -145,6 +147,10 @@ public class VinMecNewsScanner extends NewsScanner {
 
         if (ObjectUtils.isEmpty(content)) {
             content = document.select("#profile").text();
+        }
+
+        if(ObjectUtils.isEmpty(content)){
+            content = document.select(".col-sm-12.col-md-8").text();
         }
 
         if (ObjectUtils.isEmpty(content)) {
