@@ -9,6 +9,10 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.util.ObjectUtils;
 
 import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @NoArgsConstructor
 @Slf4j
@@ -16,9 +20,32 @@ public abstract class NewsScanner {
     public static final String HREF = "href";
     public static final String A_TAG = "a";
 
+     Set<String> linkCollection = ConcurrentHashMap.newKeySet();
+     Queue<String> queue = new ConcurrentLinkedQueue<>();
+
+    protected void addDocumentCollectionForCrawl(String link) {
+        if (linkCollection.add(link)) {
+            queue.add(link);
+        }
+    }
+
+    protected void addDocumentCollection(String link) {
+        linkCollection.add(link);
+    }
+
+    protected String getQueueUrl() {
+        return queue.poll();
+    }
+
+    protected  boolean queueEmpty(){
+        return queue.isEmpty();
+    }
+
     abstract String getBaseUrl();
 
     abstract String getDomain();
+
+    abstract void scanWeb();
 
     Optional<Document> getDocument(String url, ChromeDriver chromeDriver) {
 
@@ -30,9 +57,6 @@ public abstract class NewsScanner {
                 Thread.sleep(retryTimes);
                 chromeDriver.get(url);
             }
-            if(ObjectUtils.isEmpty(chromeDriver.findElement(By.id("main")))){
-                Thread.sleep(retryTimes / 50);
-            };
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -43,4 +67,6 @@ public abstract class NewsScanner {
 
         return Optional.of(Jsoup.parse(chromeDriver.getPageSource()));
     }
+
+
 }

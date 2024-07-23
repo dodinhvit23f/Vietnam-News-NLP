@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -16,10 +15,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import  java.util.stream.Collectors;
 
 @Service
@@ -30,8 +26,7 @@ public class VinMecNewsScanner extends NewsScanner {
     public static final String PAGE = "?page=";
     ChromeDriver chromeDriver;
     NewsRepository newsRepository;
-    Set<String> crawledLink = ConcurrentHashMap.newKeySet();
-    Queue<String> queue = new ConcurrentLinkedQueue<>();
+
 
     @Override
     String getBaseUrl() {
@@ -46,7 +41,7 @@ public class VinMecNewsScanner extends NewsScanner {
 
     public void scanWeb() {
         String url = getBaseUrl().concat("/vi/");
-        crawledLink.add(url);
+        linkCollection.add(url);
         queue.add(url);
         while (!queue.isEmpty()){
                scanByUrl(queue.poll());
@@ -108,7 +103,6 @@ public class VinMecNewsScanner extends NewsScanner {
                 .filter(link -> !ObjectUtils.isEmpty(link))
                 .collect(Collectors.toSet());
 
-
         scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
                 .stream()
                 .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
@@ -129,12 +123,12 @@ public class VinMecNewsScanner extends NewsScanner {
 
         scanUrlSet.stream()
                 .filter(link -> !queue.contains(link))
-                .filter(link -> !crawledLink.contains(link))
+                .filter(link -> !linkCollection.contains(link))
                 .forEach(link -> {
                     queue.add(link);
-                    crawledLink.add(link);
+                    linkCollection.add(link);
                 });
-        crawledLink.add(chromeDriver.getCurrentUrl());
+        linkCollection.add(chromeDriver.getCurrentUrl());
     }
 
     public News saveNews(Document document, String url) {
