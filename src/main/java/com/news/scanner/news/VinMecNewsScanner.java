@@ -1,3 +1,4 @@
+/*
 package com.news.scanner.news;
 
 import com.news.scanner.entity.News;
@@ -46,6 +47,11 @@ public class VinMecNewsScanner extends NewsScanner {
         while (!queue.isEmpty()){
                scanByUrl(queue.poll());
         }
+    }
+
+    @Override
+    List<String> getSubDomain() {
+        return List.of();
     }
 
     public void scanByUrl(String url) {
@@ -125,7 +131,7 @@ public class VinMecNewsScanner extends NewsScanner {
                 .filter(link -> !queue.contains(link))
                 .filter(link -> !linkCollection.contains(link))
                 .forEach(link -> {
-                    queue.add(link);
+                    queue.add(link.);
                     linkCollection.add(link);
                 });
         linkCollection.add(chromeDriver.getCurrentUrl());
@@ -168,3 +174,4 @@ public class VinMecNewsScanner extends NewsScanner {
 
 
 }
+*/

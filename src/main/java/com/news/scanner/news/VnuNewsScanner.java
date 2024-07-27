@@ -1,5 +1,6 @@
 package com.news.scanner.news;
 
+import com.news.scanner.dto.Link;
 import com.news.scanner.entity.News;
 import com.news.scanner.repositories.NewsRepository;
 import lombok.AccessLevel;
@@ -13,10 +14,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,12 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class VnuNewsScanner extends NewsScanner {
-
-    List<String> nonDocument = List.of("jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp", "svg", "ico", "heif",
-            "heic");
-
-    List<String> documentExtension = List.of("txt", "pdf", "xml", "exe", "xls", "xlsx", "xlsm", "xlsb", "xltx", "xltm");
-
+    public static final String Admission = "https://tuyensinh.uet.vnu.edu.vn/";
     ChromeDriver chromeDriver;
     NewsRepository newsRepository;
 
@@ -51,15 +44,19 @@ public class VnuNewsScanner extends NewsScanner {
         }
     }
 
-    public void scanByUrl(String rootUrl) {
+    @Override
+    List<String> getSubDomain() {
+        return List.of(Admission);
+    }
+
+    public void scanByUrl(Link rootLink) {
         // category property"v:title"
-        Optional<Document> documentOptional = getDocument(rootUrl, chromeDriver);
+        Optional<Document> documentOptional = getDocument(rootLink.getUrl(), chromeDriver);
 
         documentOptional.ifPresent(document -> {
             Set<String> scanUrlSet = document.select(NewsScanner.A_TAG)
                     .stream()
                     .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
-                    .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().contains(getBaseUrl()))
                     .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en"))
                     .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue().strip())
                     .collect(Collectors.toSet());
@@ -74,7 +71,7 @@ public class VnuNewsScanner extends NewsScanner {
 
                 if (documentExtension.contains(endOfUr[endOfUr.length - 1])) {
                     String categoryString = document.select(".breadcrumbs").text();
-                    if(ObjectUtils.isEmpty(categoryString)){
+                    if (ObjectUtils.isEmpty(categoryString)) {
                         return;
                     }
                     String[] categories = categoryString.split("\\\\");
@@ -85,32 +82,29 @@ public class VnuNewsScanner extends NewsScanner {
 
                 addDocumentCollectionForCrawl(scanUrl);
             });
-            saveNews(document, rootUrl);
+            saveNews(document, rootLink);
         });
 
 
     }
 
-    public News saveNews(Document document, String url) {
-
-        String content = document.select("#content").text();
-        String categoryString = document.select(".breadcrumbs").text();
-        if(ObjectUtils.isEmpty(categoryString)){
-            return null;
+    public void saveNews(Document document, Link link) {
+        News news = null;
+        if (!link.isSubDomain()) {
+            news = getRootDomain(document, link);
+        } else {
+            switch (link.getDomain()){
+                case Admission:
+                    news = getAdmissionsDomain(document, link);
+                    break;
+            }
         }
-        String[] categories = categoryString.split("\\\\");
 
-        News news = newsRepository.findByUrl(url).orElse(News.builder()
-                .title(document.title())
-                .url(url)
-                .domain(getDomain())
-                .content(content)
-                .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(Arrays.stream(categories).map(String::toLowerCase).toList())
-                .build());
+        if (Objects.isNull(news)) {
+            return;
+        }
 
-        news.setContent(content);
-        return newsRepository.save(news);
+        newsRepository.save(news);
     }
 
     public void saveNews(Document document, String url, List<String> categories) {
@@ -125,5 +119,37 @@ public class VnuNewsScanner extends NewsScanner {
                     .build();
             newsRepository.save(news);
         }
+    }
+
+    public News getRootDomain(Document document, Link link) {
+        String content = document.select("#content").text();
+        String categoryString = document.select(".breadcrumbs").text();
+        if (ObjectUtils.isEmpty(categoryString)) {
+            return null;
+        }
+
+        String[] categories = categoryString.split("\\\\");
+
+        return newsRepository.findByUrl(link.getUrl()).orElse(News.builder()
+                .title(document.title())
+                .url(link.getUrl())
+                .domain(getDomain())
+                .content(content)
+                .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
+                .category(Arrays.stream(categories).map(String::toLowerCase).toList())
+                .build());
+    }
+
+    public News getAdmissionsDomain(Document document, Link link) {
+
+        String content = document.select("#resume-timeline").text();
+        return News.builder()
+                .title(document.title())
+                .url(link.getUrl())
+                .domain(getDomain())
+                .content(content)
+                .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
+                .category(link.getCategories())
+                .build();
     }
 }
