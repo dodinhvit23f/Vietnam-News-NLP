@@ -1,3 +1,4 @@
+/*
 package com.news.scanner.job;
 
 import com.news.scanner.news.VinMecNewsScanner;
@@ -27,3 +28,4 @@ public class VinMecJob {
         log.info("End scan vinmec: {}", Date.from(Instant.now()));
     }
 }
+*/
