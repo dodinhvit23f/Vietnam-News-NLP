@@ -15,4 +15,5 @@ public class Link {
     List<String> categories;
     boolean isSubDomain;
     String domain;
+    String baseUrl;
 }

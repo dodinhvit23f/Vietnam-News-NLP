@@ -22,37 +22,31 @@ public abstract class NewsScanner {
     public static final String HREF = "href";
     public static final String A_TAG = "a";
     protected List<String> nonDocument = List.of("jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp", "svg", "ico", "heif",
-            "heic");
+            "heic", "ics");
 
     protected List<String> documentExtension = List.of("txt", "pdf", "xml", "exe", "xls", "xlsx", "xlsm", "xlsb",
-            "xltx", "xltm", "ics", "docx", "zip", "doc", "pptx");
+            "xltx", "xltm", "docx", "zip", "doc", "pptx");
 
     Set<String> linkCollection = ConcurrentHashMap.newKeySet();
     Queue<Link> queue = new ConcurrentLinkedQueue<>();
 
     protected void addDocumentCollectionForCrawl(String link) {
-        AtomicBoolean validLink = new AtomicBoolean(link.contains(getBaseUrl()));
+        AtomicBoolean validLink = new AtomicBoolean(link.startsWith(getBaseUrl()));
+
         AtomicBoolean isSubDoMain = new AtomicBoolean(Boolean.FALSE);
         AtomicReference<String> domain = new AtomicReference<>();
 
-        getSubDomain().forEach(subDomain -> {
-            if (link.startsWith(subDomain) && !isSubDoMain.get()) {
-                isSubDoMain.set(Boolean.TRUE);
-                domain.set(subDomain);
-                validLink.set(Boolean.TRUE);
-            }
-        });
-//        if (!validLink.get()) {
-//            getSubDomain().forEach(subDomain -> {
-//                if (link.startsWith(subDomain) && !isSubDoMain.get()) {
-//                    isSubDoMain.set(Boolean.TRUE);
-//                    domain.set(subDomain);
-//                    validLink.set(Boolean.TRUE);
-//                }
-//            });
-//        }
+        if (!validLink.get()) {
+            getSubDomain().forEach(subDomain -> {
+                if (link.startsWith(subDomain) && !isSubDoMain.get()) {
+                    isSubDoMain.set(Boolean.TRUE);
+                    domain.set(subDomain);
+                    validLink.set(Boolean.TRUE);
+                }
+            });
+        }
 
-        if(!linkCollection.add(link)){
+        if (!linkCollection.add(link)) {
             validLink.set(Boolean.FALSE);
         }
 
@@ -69,11 +63,12 @@ public abstract class NewsScanner {
                     .build());
             return;
         }
+
         queue.add(Link.builder()
                 .url(link)
                 .isSubDomain(Boolean.FALSE)
+                .baseUrl(getBaseUrl())
                 .build());
-
     }
 
     protected void addDocumentCollection(String link) {
@@ -94,9 +89,18 @@ public abstract class NewsScanner {
 
     abstract List<String> getSubDomainCategories(String subDomain);
 
-    abstract void scanWeb();
+    abstract void scanByUrl(Link link);
+
 
     abstract List<String> getSubDomain();
+
+     public void scanWeb(){
+         addDocumentCollectionForCrawl(getBaseUrl());
+         getSubDomain().forEach(this::addDocumentCollectionForCrawl);
+         while (!queueEmpty()) {
+             scanByUrl(getQueueUrl());
+         }
+    };
 
     Optional<Document> getDocument(String url, ChromeDriver chromeDriver) {
 

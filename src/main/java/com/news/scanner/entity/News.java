@@ -25,4 +25,5 @@ public class News  extends  AuditEntity{
     private String domain;
     private String createDate;
     private List<String> category;
+    private String question;
 }

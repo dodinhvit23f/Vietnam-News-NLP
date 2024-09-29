@@ -22,30 +22,48 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Slf4j
-public class VnuNewsScanner extends NewsScanner {
-
+public class UetNewsScanner extends NewsScanner {
+    public static final String ADMISSION = "https://tuyensinh.uet.vnu.edu.vn/";
+    public static final String ELECTRIC = "https://fet.uet.vnu.edu.vn/";
+    public static final String IT = "https://www.fit.uet.vnu.edu.vn/";
+    public static final String NANO_TECH = "http://fepn.uet.vnu.edu.vn/";
+    public static final String AUTOMATIC = "https://fema.uet.vnu.edu.vn/";
+    public static final String AGRICULTURE = "http://fat.uet.vnu.edu.vn/";
+    public static final String CONSTRUCTION = "https://fce.uet.vnu.edu.vn/";
+    public static final String SPACE = "https://sae.uet.vnu.edu.vn/";
+    public static final String TECHNOLOGY = "https://avitech.uet.vnu.edu.vn/";
     ChromeDriver chromeDriver;
     NewsRepository newsRepository;
 
     @Override
     String getBaseUrl() {
-        return "https://vnu.edu.vn/";
+        return "https://uet.vnu.edu.vn/";
     }
 
     @Override
     String getDomain() {
-        return "vnu.edu";
+        return "uet.vnu.edu";
     }
 
     @Override
     List<String> getSubDomainCategories(String subDomain) {
         Map<String, List<String>> categories = new HashMap<>();
+        categories.put(ADMISSION, List.of("Tuyển Sinh"));
+        categories.put(ELECTRIC, List.of("điện"));
+        categories.put(IT, List.of("công nghệ thông tin"));
+        categories.put(NANO_TECH, List.of("vật lý kỹ thuật & công nghệ nano"));
+        categories.put(AUTOMATIC, List.of("cơ học kỹ thuật và tự động hoá"));
+        categories.put(AGRICULTURE, List.of("công nghệ nông nghiệp"));
+        categories.put(CONSTRUCTION, List.of("công nghệ xây dựng và giao thông"));
+        categories.put(SPACE, List.of("công nghệ hàng không và vũ trụ"));
+        categories.put(TECHNOLOGY, List.of("tiên tiến về kỹ thuật công nghệ"));
+
         return categories.get(subDomain);
     }
 
     @Override
     List<String> getSubDomain() {
-        return List.of();
+        return List.of(ADMISSION, ELECTRIC, IT, NANO_TECH, AUTOMATIC, CONSTRUCTION, SPACE, TECHNOLOGY, AGRICULTURE);
     }
 
     public void scanByUrl(Link rootLink) {
@@ -57,24 +75,13 @@ public class VnuNewsScanner extends NewsScanner {
                     .stream()
                     .filter(aTag -> !ObjectUtils.isEmpty(aTag.getAttribute(NewsScanner.HREF)))
                     .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("/en"))
-                    .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).startsWith("/"))
-                    .map(aTag -> aTag.getAttribute(NewsScanner.HREF).strip()
-                            .replace("#","")
-                            .replace("/respond", "/"))
-                    .collect(Collectors.toSet());
-
-            Set<String> set = chromeDriver.findElements(By.tagName(NewsScanner.A_TAG))
-                    .stream()
-                    .filter(aTag -> !ObjectUtils.isEmpty(aTag.getAttribute(NewsScanner.HREF)))
-                    .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("/en"))
-                    .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).startsWith("/"))
                     .map(aTag -> aTag.getAttribute(NewsScanner.HREF).strip()
                             .replace("#","")
                             .replace("/respond", "/"))
                     .collect(Collectors.toSet());
 
             scanUrlSet.forEach(scanUrl -> {
-               /* String[] endOfUr = scanUrl.split("\\.");
+                String[] endOfUr = scanUrl.split("\\.");
                 if (ObjectUtils.isEmpty(endOfUr) ||
                         nonDocument.contains(endOfUr[endOfUr.length - 1])) {
                     addDocumentCollection(scanUrl);
@@ -90,8 +97,9 @@ public class VnuNewsScanner extends NewsScanner {
                     saveNews(documentOptional.get(), scanUrl, Arrays.stream(categories).map(String::strip).collect(Collectors.toList()));
                     addDocumentCollection(scanUrl);
                     return;
-                }*/
-            scanUrlSet.forEach(this::addDocumentCollectionForCrawl);
+                }
+
+                addDocumentCollectionForCrawl(scanUrl);
             });
             saveNews(document, rootLink);
         });
@@ -104,7 +112,34 @@ public class VnuNewsScanner extends NewsScanner {
         if (!link.isSubDomain()) {
             news = getRootDomain(document, link);
         } else {
-          log.error(link.getUrl());
+            switch (link.getDomain()) {
+                case ADMISSION:
+                    news = getAdmissionsDomain(document, link);
+                    break;
+                case IT:
+                    news = getItDomain(document, link);
+                    break;
+                case AGRICULTURE:
+                    news = getAgricultureDomain(document, link);
+                    break;
+                case AUTOMATIC:
+                    news = getAutomaticDomain(document, link);
+                    break;
+                case CONSTRUCTION:
+                    news = getConstructionDomain(document, link);
+                    break;
+                case SPACE:
+                    news = getSpaceDomain(document, link);
+                    break;
+                case TECHNOLOGY:
+                    news = getTechnologyDomain(document, link);
+                    break;
+                case NANO_TECH:
+                    news = getNaoTechDomain(document, link);
+                    break;
+                case ELECTRIC:
+                    news = getElectricDomain(document, link);
+            }
         }
 
         if (Objects.isNull(news)) {
@@ -129,13 +164,13 @@ public class VnuNewsScanner extends NewsScanner {
     }
 
     public News getRootDomain(Document document, Link link) {
-        String content = document.select(".catcontent").text();
-        String categoryString = document.select(".tdlinktitle").text();
+        String content = document.select("#content").text();
+        String categoryString = document.select(".breadcrumbs").text();
         if (ObjectUtils.isEmpty(categoryString)) {
             return null;
         }
 
-        String[] categories = categoryString.split(">");
+        String[] categories = categoryString.split("\\\\");
 
         return newsRepository.findByUrl(link.getUrl()).orElse(News.builder()
                 .title(document.title())

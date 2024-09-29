@@ -1,8 +1,10 @@
-/*
+
 package com.news.scanner.news;
 
+import com.news.scanner.dto.Link;
 import com.news.scanner.entity.News;
 import com.news.scanner.repositories.NewsRepository;
+import com.news.scanner.utils.Utilization;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,7 +19,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import  java.util.stream.Collectors;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -40,12 +42,17 @@ public class VinMecNewsScanner extends NewsScanner {
         return "vinmec";
     }
 
+    @Override
+    List<String> getSubDomainCategories(String subDomain) {
+        return List.of();
+    }
+
     public void scanWeb() {
         String url = getBaseUrl().concat("/vi/");
-        linkCollection.add(url);
-        queue.add(url);
-        while (!queue.isEmpty()){
-               scanByUrl(queue.poll());
+        addDocumentCollectionForCrawl(url);
+
+        while (!queue.isEmpty()) {
+            scanByUrl(getQueueUrl());
         }
     }
 
@@ -54,8 +61,8 @@ public class VinMecNewsScanner extends NewsScanner {
         return List.of();
     }
 
-    public void scanByUrl(String url) {
-        String[] endOfUr = url.split("\\.");
+    public void scanByUrl(Link link) {
+        String[] endOfUr = link.getUrl().split("\\.");
 
         if (ObjectUtils.isEmpty(endOfUr) ||
                 List.of("txt", "pdf", "xml", "exe", "xls", "xlsx", "xlsm", "xlsb", "xltx", "xltm",
@@ -64,20 +71,20 @@ public class VinMecNewsScanner extends NewsScanner {
             return;
         }
 
-        String cutUrl = url.split("\\?")[0];
+        String cutUrl = link.getUrl().split("\\?")[0];
         if (newsRepository.findByUrl(cutUrl).isPresent()) {
             return;
         }
 
-        log.info("scanning url: {}", url);
-        Optional<Document> documentOptional = getDocument(url, chromeDriver);
+        log.info("scanning url: {}", cutUrl);
+        Optional<Document> documentOptional = getDocument(cutUrl, chromeDriver);
         if (documentOptional.isEmpty()) {
             return;
         }
 
         Document document = documentOptional.get();
 
-        Optional<News> news = newsRepository.findByUrl(url);
+        Optional<News> news = newsRepository.findByUrl(cutUrl);
         if (news.isEmpty()) {
             saveNews(document, getVinMecUrl(chromeDriver.getCurrentUrl()));
         }
@@ -95,7 +102,7 @@ public class VinMecNewsScanner extends NewsScanner {
                         return path.concat(path);
                     }
 
-                    String[] currentUrlPath = url.split("\\?page=");
+                    String[] currentUrlPath = cutUrl.split("\\?page=");
                     String[] urlPath = path.split("\\?page=");
 
                     if (currentUrlPath.length == 2 &&
@@ -106,7 +113,7 @@ public class VinMecNewsScanner extends NewsScanner {
 
                     return null;
                 })
-                .filter(link -> !ObjectUtils.isEmpty(link))
+                .filter(linkExtract -> !ObjectUtils.isEmpty(linkExtract))
                 .collect(Collectors.toSet());
 
         scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
@@ -127,17 +134,10 @@ public class VinMecNewsScanner extends NewsScanner {
                 .map(aTag -> getVinMecUrl(aTag.attribute(NewsScanner.HREF).getValue()))
                 .collect(Collectors.toSet()));
 
-        scanUrlSet.stream()
-                .filter(link -> !queue.contains(link))
-                .filter(link -> !linkCollection.contains(link))
-                .forEach(link -> {
-                    queue.add(link.);
-                    linkCollection.add(link);
-                });
-        linkCollection.add(chromeDriver.getCurrentUrl());
+        scanUrlSet.forEach(this::addDocumentCollectionForCrawl);
     }
 
-    public News saveNews(Document document, String url) {
+    public void saveNews(Document document, String url) {
 
         String content = document.select(".block-content.cms.pageview-highest").text();
 
@@ -149,23 +149,27 @@ public class VinMecNewsScanner extends NewsScanner {
             content = document.select("#profile").text();
         }
 
-        if(ObjectUtils.isEmpty(content)){
+        if (ObjectUtils.isEmpty(content)) {
             content = document.select(".col-sm-12.col-md-8").text();
         }
 
         if (ObjectUtils.isEmpty(content)) {
-            return null;
+            content = document.select(".container_body").text();
+        }
+
+        if (ObjectUtils.isEmpty(content)) {
+            return;
         }
 
         News news = News.builder()
                 .title(document.title())
                 .url(url)
                 .domain(getDomain())
-                .content(content)
+                .content(Utilization.splitText(content, Utilization.getPunctuationForLanguage()))
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
                 .build();
 
-        return newsRepository.save(news);
+        newsRepository.save(news);
     }
 
     private static String getVinMecUrl(String url) {
@@ -174,4 +178,4 @@ public class VinMecNewsScanner extends NewsScanner {
 
 
 }
-*/
+
