@@ -66,6 +66,16 @@ public class UetNewsScanner extends NewsScanner {
         return List.of(ADMISSION, ELECTRIC, IT, NANO_TECH, AUTOMATIC, CONSTRUCTION, SPACE, TECHNOLOGY, AGRICULTURE);
     }
 
+    @Override
+    List<String> findPageCategories(Document document, String domain) {
+        return List.of();
+    }
+
+    @Override
+    String findPageContent(Document document, String domain) {
+        return "";
+    }
+
     public void scanByUrl(Link rootLink) {
         // category property"v:title"
         Optional<Document> documentOptional = getDocument(rootLink.getUrl(), chromeDriver);
@@ -99,7 +109,7 @@ public class UetNewsScanner extends NewsScanner {
                     return;
                 }
 
-                addDocumentCollectionForCrawl(scanUrl);
+                addDocumentCollectionForCrawl(scanUrl, rootLink.getDomain());
             });
             saveNews(document, rootLink);
         });

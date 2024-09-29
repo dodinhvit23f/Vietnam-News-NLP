@@ -1,24 +1,27 @@
 package com.news.scanner.news;
 
 import com.news.scanner.dto.Link;
+import com.news.scanner.entity.News;
+import com.news.scanner.repositories.NewsRepository;
+import com.news.scanner.utils.Utilization;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
-@NoArgsConstructor
+
 @Slf4j
+@NoArgsConstructor
 public abstract class NewsScanner {
+
     public static final String HREF = "href";
     public static final String A_TAG = "a";
     protected List<String> nonDocument = List.of("jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp", "svg", "ico", "heif",
@@ -30,21 +33,8 @@ public abstract class NewsScanner {
     Set<String> linkCollection = ConcurrentHashMap.newKeySet();
     Queue<Link> queue = new ConcurrentLinkedQueue<>();
 
-    protected void addDocumentCollectionForCrawl(String link) {
-        AtomicBoolean validLink = new AtomicBoolean(link.startsWith(getBaseUrl()));
-
-        AtomicBoolean isSubDoMain = new AtomicBoolean(Boolean.FALSE);
-        AtomicReference<String> domain = new AtomicReference<>();
-
-        if (!validLink.get()) {
-            getSubDomain().forEach(subDomain -> {
-                if (link.startsWith(subDomain) && !isSubDoMain.get()) {
-                    isSubDoMain.set(Boolean.TRUE);
-                    domain.set(subDomain);
-                    validLink.set(Boolean.TRUE);
-                }
-            });
-        }
+    protected void addDocumentCollectionForCrawl(String link, String domain) {
+        AtomicBoolean validLink = new AtomicBoolean(link.startsWith(domain));
 
         if (!linkCollection.add(link)) {
             validLink.set(Boolean.FALSE);
@@ -54,20 +44,11 @@ public abstract class NewsScanner {
             return;
         }
 
-        if (isSubDoMain.get()) {
-            queue.add(Link.builder()
-                    .url(link)
-                    .isSubDomain(Boolean.TRUE)
-                    .categories(getSubDomainCategories(domain.get()))
-                    .domain(domain.get())
-                    .build());
-            return;
-        }
-
         queue.add(Link.builder()
                 .url(link)
-                .isSubDomain(Boolean.FALSE)
-                .baseUrl(getBaseUrl())
+                .isSubDomain(getSubDomain().contains(domain))
+                .categories(getSubDomainCategories(domain))
+                .domain(domain)
                 .build());
     }
 
@@ -91,16 +72,19 @@ public abstract class NewsScanner {
 
     abstract void scanByUrl(Link link);
 
-
     abstract List<String> getSubDomain();
 
-     public void scanWeb(){
-         addDocumentCollectionForCrawl(getBaseUrl());
-         getSubDomain().forEach(this::addDocumentCollectionForCrawl);
-         while (!queueEmpty()) {
-             scanByUrl(getQueueUrl());
-         }
-    };
+    abstract List<String> findPageCategories(Document document, String domain);
+
+    abstract String findPageContent(Document document, String domain);
+
+    public void scanWeb() {
+        addDocumentCollectionForCrawl(getBaseUrl(), getBaseUrl());
+        getSubDomain().forEach(link -> addDocumentCollectionForCrawl(link, link));
+        while (!queueEmpty()) {
+            scanByUrl(getQueueUrl());
+        }
+    }
 
     Optional<Document> getDocument(String url, ChromeDriver chromeDriver) {
 
@@ -123,5 +107,29 @@ public abstract class NewsScanner {
         return Optional.of(Jsoup.parse(chromeDriver.getPageSource()));
     }
 
+
+    public void saveNews(Document document, Link url, NewsRepository newsRepository) {
+        Optional<News> newsOptional = newsRepository.findByUrl(url.getUrl());
+
+        if (newsOptional.isEmpty()) {
+
+            List<String> categories = new ArrayList<>(url.getCategories());
+            categories.addAll(findPageCategories(document, url.getDomain()));
+            String content = Utilization.splitText(
+                    findPageContent(document, url.getDomain()),
+                    Utilization.getPunctuationForLanguage());
+
+            News news = News.builder()
+                    .title(document.title())
+                    .url(url.getUrl())
+                    .domain(getDomain())
+                    .content(content)
+                    .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
+                    .category(categories)
+                    .build();
+
+            newsRepository.save(news);
+        }
+    }
 
 }

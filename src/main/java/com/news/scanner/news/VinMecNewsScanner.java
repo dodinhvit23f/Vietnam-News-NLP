@@ -49,7 +49,7 @@ public class VinMecNewsScanner extends NewsScanner {
 
     public void scanWeb() {
         String url = getBaseUrl().concat("/vi/");
-        addDocumentCollectionForCrawl(url);
+        addDocumentCollectionForCrawl(url, getBaseUrl());
 
         while (!queue.isEmpty()) {
             scanByUrl(getQueueUrl());
@@ -59,6 +59,16 @@ public class VinMecNewsScanner extends NewsScanner {
     @Override
     List<String> getSubDomain() {
         return List.of();
+    }
+
+    @Override
+    List<String> findPageCategories(Document document, String domain) {
+        return List.of();
+    }
+
+    @Override
+    String findPageContent(Document document, String domain) {
+        return "";
     }
 
     public void scanByUrl(Link link) {
@@ -134,7 +144,7 @@ public class VinMecNewsScanner extends NewsScanner {
                 .map(aTag -> getVinMecUrl(aTag.attribute(NewsScanner.HREF).getValue()))
                 .collect(Collectors.toSet()));
 
-        scanUrlSet.forEach(this::addDocumentCollectionForCrawl);
+        scanUrlSet.forEach(link1 -> addDocumentCollectionForCrawl(link1, link.getDomain()));
     }
 
     public void saveNews(Document document, String url) {
