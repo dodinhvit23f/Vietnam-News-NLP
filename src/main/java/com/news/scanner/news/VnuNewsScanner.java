@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class VnuNewsScanner extends NewsScanner {
 
-    public static final String IS = "http://www.is.vnu.edu.vn/";
+    public static final String IS = "https://www.is.vnu.edu.vn/";
     public static final String VNU = "https://vnu.edu.vn/";
     public static final String UEB = "https://ueb.edu.vn/";
     public static final String TTGDTC = "https://ttgdtc.vnu.edu.vn/";
@@ -103,7 +103,13 @@ public class VnuNewsScanner extends NewsScanner {
 
     @Override
     List<String> getSubDomain() {
-        return List.of(IS, VNU, UEB, TTGDTC, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
+       // return List.of(IS, VNU, UEB, TTGDTC, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
+        return List.of(IS);
+    }
+
+    @Override
+    protected List<String> getNoneCrawlLinks() {
+        return List.of("https://vnu.edu.vn/home/?C151/N26741");
     }
 
     public void scanByUrl(Link rootLink) {
@@ -114,7 +120,7 @@ public class VnuNewsScanner extends NewsScanner {
                     .stream()
                     .filter(aTag -> !ObjectUtils.isEmpty(aTag.getAttribute(NewsScanner.HREF)))
                     .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("/en"))
-                    .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).startsWith(rootLink.getDomain()))
+                    .filter(aTag -> aTag.getAttribute(NewsScanner.HREF).startsWith(rootLink.getDomain()))
                     .map(aTag -> aTag.getAttribute(NewsScanner.HREF).strip()
                             .replace("#", "")
                             .replace("/respond", "/"))
@@ -126,26 +132,6 @@ public class VnuNewsScanner extends NewsScanner {
             saveNews(document, rootLink, newsRepository);
         });
     }
-
-    public News getRootDomain(Document document, Link link) {
-        String content = document.select(".catcontent").text();
-        String categoryString = document.select(".tdlinktitle").text();
-        if (ObjectUtils.isEmpty(categoryString)) {
-            return null;
-        }
-
-        String[] categories = categoryString.split(">");
-
-        return newsRepository.findByUrl(link.getUrl()).orElse(News.builder()
-                .title(document.title())
-                .url(link.getUrl())
-                .domain(getDomain())
-                .content(content)
-                .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(Arrays.stream(categories).map(String::toLowerCase).toList())
-                .build());
-    }
-
 
     @Override
     List<String> findPageCategories(Document document, String domain) {
@@ -215,6 +201,22 @@ public class VnuNewsScanner extends NewsScanner {
         };
     }
 
+    private String findVNUContent(Document document, String domain) {
+        if(!ObjectUtils.isEmpty(document.select( ".catcontent")))
+        {
+            return document.select( ".catcontent").first().text();
+        }
+
+        if(!ObjectUtils.isEmpty(document.select( ".news-show"))){
+            return document.select( ".news-show").first().text();
+        }
+
+        if(!ObjectUtils.isEmpty(document.select( ".conten_cate"))){
+            return document.select( ".conten_cate").first().text();
+        }
+        return "";
+    }
+
     private List<String> findVNUCategories(Document document, String domain) {
         Elements titles = null;
 
@@ -226,19 +228,73 @@ public class VnuNewsScanner extends NewsScanner {
                     .collect(Collectors.toList());
         }
 
+        if(!ObjectUtils.isEmpty(document.select("div.title-cate a"))) {
+            titles = document.select("div.title-cate a");
+            return titles.stream()
+                    .filter(Element::hasText)
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+        }
         return Collections.emptyList();
     }
 
-    private String findVNUContent(Document document, String domain) {
-        if(!ObjectUtils.isEmpty(document.select( ".catcontent")))
-        {
-            return document.select( ".catcontent").first().text();
+    private String findISContent(Document document, String domain) {
+        Elements content = null;
+        if(!ObjectUtils.isEmpty(document.select("#tin-cap-nhat-homepage"))) {
+            content = document.select("#tin-cap-nhat-homepage");
+            return content.first().text();
         }
 
-        if(!ObjectUtils.isEmpty(document.select( ".news-show"))){
-            return document.select( ".news-show").first().text();
+        if(!ObjectUtils.isEmpty(document.select(".entry-content"))) {
+            content = document.select(".entry-content");
+            return content.first().text();
         }
+
+        if(!ObjectUtils.isEmpty(document.select(".main-content"))) {
+            content = document.select(".main-content");
+            return content.first().text();
+        }
+
+
         return "";
+    }
+
+    private List<String> findISCategories(Document document, String domain) {
+        Elements titles = null;
+        if(!ObjectUtils.isEmpty(document.select( "a.collapsed"))){
+            titles = document.select("a.collapsed");
+            return titles.stream()
+                    .filter(Element::hasText)
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+        }
+
+        if(!ObjectUtils.isEmpty(document.select( "center h3"))){
+            titles = document.select("center h3");
+            return titles.stream()
+                    .filter(Element::hasText)
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+        }
+
+        if(!ObjectUtils.isEmpty(document.select( "div.post-detail h1"))){
+            titles = document.select("div.post-detail h1");
+            return titles.stream()
+                    .filter(Element::hasText)
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+        }
+        if(!ObjectUtils.isEmpty(document.select( "div.teams-list h2"))){
+            titles = document.select("div.teams-list h2");
+            return titles.stream()
+                    .filter(Element::hasText)
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+        }
+
+
+
+        return Collections.emptyList();
     }
 
 
@@ -344,9 +400,7 @@ public class VnuNewsScanner extends NewsScanner {
         return "";
     }
 
-    private String findISContent(Document document, String domain) {
-        return "";
-    }
+
 
     private List<String> findIFICategories(Document document, String domain) {
         return Collections.emptyList();
@@ -447,12 +501,5 @@ public class VnuNewsScanner extends NewsScanner {
     private List<String> findUEBCategories(Document document, String domain) {
         return Collections.emptyList();
     }
-
-
-
-    private List<String> findISCategories(Document document, String domain) {
-        return Collections.emptyList();
-    }
-
 
 }

@@ -5,6 +5,7 @@ import com.news.scanner.converter.ZonedDateTimeToDateTimeConverter;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -87,7 +88,12 @@ public class ApplicationConfiguration {
         options.addArguments("--disable-blink-features=AutomationControlled");
         //options.add_experimental_option("excludeSwitches", ["enable-automation"])
         //options.add_experimental_option('useAutomationExtension', False);
-
+        options.addArguments("--disable-gpu"); //https://stackoverflow.com/questions/51959986/how-to-solve-selenium-chromedriver-timed-out-receiving-message-from-renderer-exc
+        options.addArguments("--disable-browser-side-navigation"); //https://stackoverflow.com/a/49123152/1689770
+        options.addArguments("--disable-dev-shm-usage"); //https://stackoverflow.com/a/50725918/1689770
+        options.addArguments("enable-automation"); // https://stackoverflow.com/a/43840128/1689770
+        options.addArguments("--disable-infobars"); // https://stackoverflow.com/a/43840128/1689770
+        options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
 
         return options;
     }
@@ -97,6 +103,7 @@ public class ApplicationConfiguration {
         ChromeDriver driver = new ChromeDriver(service, chromeOptions);
         driver.manage().window().maximize();
         driver.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+        driver.manage().timeouts().pageLoadTimeout(1, TimeUnit.MINUTES);
         return driver;
     }
 

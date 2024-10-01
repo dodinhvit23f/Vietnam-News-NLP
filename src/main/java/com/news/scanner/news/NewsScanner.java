@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.springframework.util.ObjectUtils;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -16,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -38,6 +41,22 @@ public abstract class NewsScanner {
 
         if (!linkCollection.add(link)) {
             validLink.set(Boolean.FALSE);
+        }
+
+        if(!ObjectUtils.isEmpty(getNoneCrawlLinks().stream().filter(link::startsWith).collect(Collectors.toSet()))) {
+            validLink.set(Boolean.FALSE);
+        }
+
+        String[] endOfUr = link.split("\\.");
+        if (ObjectUtils.isEmpty(endOfUr) ||
+                nonDocument.contains(endOfUr[endOfUr.length - 1])) {
+            addDocumentCollection(link);
+            return;
+        }
+
+        if (documentExtension.contains(endOfUr[endOfUr.length - 1])) {
+            addDocumentCollection(link);
+            return;
         }
 
         if (!validLink.get()) {
@@ -79,10 +98,15 @@ public abstract class NewsScanner {
     abstract String findPageContent(Document document, String domain);
 
     public void scanWeb() {
-        addDocumentCollectionForCrawl(getBaseUrl(), getBaseUrl());
+        //addDocumentCollectionForCrawl(getBaseUrl(), getBaseUrl());
         getSubDomain().forEach(link -> addDocumentCollectionForCrawl(link, link));
+        getNoneCrawlLinks().forEach(this::addDocumentCollection);
         while (!queueEmpty()) {
-            scanByUrl(getQueueUrl());
+            try{
+                scanByUrl(getQueueUrl());
+            }catch (Exception e){
+                log.error(e.getMessage());
+            }
         }
     }
 
@@ -96,8 +120,12 @@ public abstract class NewsScanner {
                 Thread.sleep(retryTimes);
                 chromeDriver.get(url);
             }
+        } catch (WebDriverException e){
+            log.error(e.getMessage());
+            return Optional.empty();
         } catch (Exception e) {
             log.error(e.getMessage());
+            return Optional.empty();
         }
 
         if (chromeDriver.getPageSource().isEmpty()) {
@@ -105,6 +133,10 @@ public abstract class NewsScanner {
         }
 
         return Optional.of(Jsoup.parse(chromeDriver.getPageSource()));
+    }
+
+    protected List<String> getNoneCrawlLinks() {
+        return Collections.emptyList();
     }
 
 
@@ -117,7 +149,12 @@ public abstract class NewsScanner {
             categories.addAll(findPageCategories(document, url.getDomain()));
             String content = Utilization.splitText(
                     findPageContent(document, url.getDomain()),
-                    Utilization.getPunctuationForLanguage());
+                    Utilization.getPunctuationForLanguage()).strip();
+
+            if(ObjectUtils.isEmpty(content)){
+                log.error(url.getUrl());
+                return;
+            }
 
             News news = News.builder()
                     .title(document.title())
