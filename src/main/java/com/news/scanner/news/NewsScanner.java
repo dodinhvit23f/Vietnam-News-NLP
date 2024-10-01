@@ -31,7 +31,7 @@ public abstract class NewsScanner {
             "heic", "ics");
 
     protected List<String> documentExtension = List.of("txt", "pdf", "xml", "exe", "xls", "xlsx", "xlsm", "xlsb",
-            "xltx", "xltm", "docx", "zip", "doc", "pptx");
+            "xltx", "xltm", "docx", "zip", "doc", "pptx","rtf");
 
     Set<String> linkCollection = ConcurrentHashMap.newKeySet();
     Queue<Link> queue = new ConcurrentLinkedQueue<>();
@@ -63,7 +63,7 @@ public abstract class NewsScanner {
             return;
         }
 
-        queue.add(Link.builder()
+       queue.add(Link.builder()
                 .url(link)
                 .isSubDomain(getSubDomain().contains(domain))
                 .categories(getSubDomainCategories(domain))
