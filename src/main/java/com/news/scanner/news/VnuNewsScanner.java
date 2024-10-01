@@ -104,12 +104,13 @@ public class VnuNewsScanner extends NewsScanner {
     @Override
     List<String> getSubDomain() {
        // return List.of(IS, VNU, UEB, TTGDTC, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
-        return List.of(IS);
+        return List.of(UEB);
     }
 
     @Override
     protected List<String> getNoneCrawlLinks() {
-        return List.of("https://vnu.edu.vn/home/?C151/N26741");
+        return List.of("https://vnu.edu.vn/home/?C151/N26741",
+                "https://vnu.edu.vn/home/?C151/N26846");
     }
 
     public void scanByUrl(Link rootLink) {
@@ -126,9 +127,7 @@ public class VnuNewsScanner extends NewsScanner {
                             .replace("/respond", "/"))
                     .collect(Collectors.toSet());
 
-            scanUrlSet.forEach(scanUrl ->
-                scanUrlSet.forEach(link -> addDocumentCollectionForCrawl(link, rootLink.getDomain()))
-            );
+            scanUrlSet.forEach(scanUrl ->addDocumentCollectionForCrawl(scanUrl, rootLink.getDomain()));
             saveNews(document, rootLink, newsRepository);
         });
     }
@@ -292,10 +291,44 @@ public class VnuNewsScanner extends NewsScanner {
                     .collect(Collectors.toList());
         }
 
+        return Collections.emptyList();
+    }
 
+    private String findUEBContent(Document document, String domain) {
+        Elements content = null;
+
+        if(ObjectUtils.isEmpty(findUEBCategories(document, domain))) {
+            return "";
+        }
+
+        if(!ObjectUtils.isEmpty(document.select( "div.about-news-detail div.container"))){
+            content = document.select("div.about-news-detail div.container");
+            return content.first().text();
+        }
+
+        if(!ObjectUtils.isEmpty(document.select( "div.section.about-news-second div.container"))){
+            content = document.select("div.section.about-news-second div.container");
+            return content.first().text();
+        }
+
+
+        return "";
+    }
+
+    private List<String> findUEBCategories(Document document, String domain) {
+        Elements titles = null;
+
+        if(!ObjectUtils.isEmpty(document.select( "li.breadcrumb-item.uebnavi a"))){
+            titles = document.select("li.breadcrumb-item.uebnavi a");
+            return titles.stream()
+                    .filter(Element::hasText)
+                    .map(Element::text)
+                    .collect(Collectors.toList());
+        }
 
         return Collections.emptyList();
     }
+
 
 
     private String findVJUContent(Document document, String domain) {
@@ -322,9 +355,6 @@ public class VnuNewsScanner extends NewsScanner {
         return "";
     }
 
-    private String findUEBContent(Document document, String domain) {
-        return "";
-    }
 
 
 
@@ -498,8 +528,6 @@ public class VnuNewsScanner extends NewsScanner {
         return Collections.emptyList();
     }
 
-    private List<String> findUEBCategories(Document document, String domain) {
-        return Collections.emptyList();
-    }
+
 
 }
