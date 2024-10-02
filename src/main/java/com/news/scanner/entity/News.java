@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
+import java.util.Set;
 
 @Document("news")
 @SuperBuilder
@@ -24,6 +24,6 @@ public class News  extends  AuditEntity{
     private String content;
     private String domain;
     private String createDate;
-    private List<String> category;
+    private Set<String> category;
     private String question;
 }

@@ -167,7 +167,7 @@ public class UetNewsScanner extends NewsScanner {
                     .url(url)
                     .domain(getDomain())
                     .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                    .category(categories)
+                    .category(new HashSet<>(categories))
                     .build();
             newsRepository.save(news);
         }
@@ -188,7 +188,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(Arrays.stream(categories).map(String::toLowerCase).toList())
+                .category(Arrays.stream(categories).map(String::toLowerCase).collect(Collectors.toSet()))
                 .build());
     }
 
@@ -205,7 +205,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -222,7 +222,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -239,7 +239,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -256,7 +256,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -273,7 +273,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -290,7 +290,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -307,7 +307,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -324,7 +324,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -341,7 +341,7 @@ public class UetNewsScanner extends NewsScanner {
                 .domain(getDomain())
                 .content(content)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                .category(link.getCategories())
+                .category(link.getCategories().stream().map(String::toLowerCase).collect(Collectors.toSet()))
                 .build();
     }
 }

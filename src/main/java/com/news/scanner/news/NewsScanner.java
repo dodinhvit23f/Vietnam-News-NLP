@@ -45,6 +45,7 @@ public abstract class NewsScanner {
 
         if(!ObjectUtils.isEmpty(getNoneCrawlLinks().stream().filter(link::startsWith).collect(Collectors.toSet()))) {
             validLink.set(Boolean.FALSE);
+            return;
         }
 
         String[] endOfUr = link.split("\\.");
@@ -122,6 +123,9 @@ public abstract class NewsScanner {
             }
         } catch (WebDriverException e){
             log.error(e.getMessage());
+            if(!ObjectUtils.isEmpty(chromeDriver.getPageSource())){
+                return Optional.of(Jsoup.parse(chromeDriver.getPageSource()));
+            }
             return Optional.empty();
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -162,7 +166,7 @@ public abstract class NewsScanner {
                     .domain(getDomain())
                     .content(content)
                     .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
-                    .category(categories)
+                    .category(categories.stream().map(String::toLowerCase).collect(Collectors.toSet()))
                     .build();
 
             newsRepository.save(news);
