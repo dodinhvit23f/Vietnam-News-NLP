@@ -103,7 +103,7 @@ public class ApplicationConfiguration {
         ChromeDriver driver = new ChromeDriver(service, chromeOptions);
         driver.manage().window().maximize();
         driver.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
-        driver.manage().timeouts().pageLoadTimeout(40, TimeUnit.SECONDS);
+        driver.manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
         return driver;
     }
 

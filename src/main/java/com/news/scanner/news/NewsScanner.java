@@ -28,10 +28,10 @@ public abstract class NewsScanner {
     public static final String HREF = "href";
     public static final String A_TAG = "a";
     protected List<String> nonDocument = List.of("jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp", "svg", "ico", "heif",
-            "heic", "ics");
+            "heic", "ics", "jfif");
 
     protected List<String> documentExtension = List.of("txt", "pdf", "xml", "exe", "xls", "xlsx", "xlsm", "xlsb",
-            "xltx", "xltm", "docx", "zip", "doc", "pptx","rtf");
+            "xltx", "xltm", "docx", "zip", "doc", "pptx","rtf", "rar");
 
     Set<String> linkCollection = ConcurrentHashMap.newKeySet();
     Queue<Link> queue = new ConcurrentLinkedQueue<>();
@@ -99,7 +99,6 @@ public abstract class NewsScanner {
     abstract String findPageContent(Document document, String domain);
 
     public void scanWeb() {
-        //addDocumentCollectionForCrawl(getBaseUrl(), getBaseUrl());
         getSubDomain().forEach(link -> addDocumentCollectionForCrawl(link, link));
         getNoneCrawlLinks().forEach(this::addDocumentCollection);
         while (!queueEmpty()) {
@@ -163,7 +162,7 @@ public abstract class NewsScanner {
             News news = News.builder()
                     .title(document.title())
                     .url(url.getUrl())
-                    .domain(getDomain())
+                    .domain(url.getDomain())
                     .content(content)
                     .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
                     .category(categories.stream().map(String::toLowerCase).collect(Collectors.toSet()))

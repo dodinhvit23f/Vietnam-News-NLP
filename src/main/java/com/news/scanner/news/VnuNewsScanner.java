@@ -33,7 +33,6 @@ public class VnuNewsScanner extends NewsScanner {
   public static final String IS = "https://www.is.vnu.edu.vn/";
   public static final String VNU = "https://vnu.edu.vn/";
   public static final String UEB = "https://ueb.edu.vn/";
-  public static final String TTGDTC = "https://ttgdtc.vnu.edu.vn/";
   public static final String PRESS = "https://press.vnu.edu.vn/";
   public static final String HUS = "https://hus.vnu.edu.vn/";
   public static final String EDC = "https://education.vnu.edu.vn/";
@@ -79,7 +78,6 @@ public class VnuNewsScanner extends NewsScanner {
     categories.put(IS, List.of(raw, "quốc tế"));
     categories.put(VNU, List.of(raw));
     categories.put(UEB, List.of(raw, "kinh tế"));
-    categories.put(TTGDTC, List.of(raw, "thể chất", "thể thao"));
     categories.put(PRESS, List.of(raw, "nhà xuất bản"));
     categories.put(HUS, List.of(raw, "khoa học", "tự nhiên"));
     categories.put(EDC, List.of(raw, "giáo dục"));
@@ -108,8 +106,8 @@ public class VnuNewsScanner extends NewsScanner {
 
     @Override
     List<String> getSubDomain() {
-       // return List.of(IS, VNU, UEB, TTGDTC, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
-        return List.of(UEB);
+       // return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
+        return List.of(HUS);
     }
 
     @Override
@@ -138,8 +136,10 @@ public class VnuNewsScanner extends NewsScanner {
               }
           )
           .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("collapse"))
+          .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("#"))
+          .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("/login"))
+          .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("/register"))
           .map(aTag -> aTag.getAttribute(NewsScanner.HREF).strip()
-              .replace("#", "")
               .replace("/respond", "/"))
           .collect(Collectors.toSet());
 
@@ -154,7 +154,6 @@ public class VnuNewsScanner extends NewsScanner {
       case IS -> findISCategories(document, domain);
       case VNU -> findVNUCategories(document, domain);
       case UEB -> findUEBCategories(document, domain);
-      case TTGDTC -> findTTGDTCCategories(document, domain);
       case PRESS -> findPRESSCategories(document, domain);
       case HUS -> findHUSCategories(document, domain);
       case EDC -> findEDCCategories(document, domain);
@@ -188,7 +187,6 @@ public class VnuNewsScanner extends NewsScanner {
       case IS -> findISContent(document, domain);
       case VNU -> findVNUContent(document, domain);
       case UEB -> findUEBContent(document, domain);
-      case TTGDTC -> findTTGDTCContent(document, domain);
       case PRESS -> findPRESSContent(document, domain);
       case HUS -> findHUSContent(document, domain);
       case EDC -> findEDCContent(document, domain);
@@ -343,7 +341,58 @@ public class VnuNewsScanner extends NewsScanner {
         return Collections.emptyList();
     }
 
+  private String findPRESSContent(Document document, String domain) {
+    Elements content = null;
 
+    if(!ObjectUtils.isEmpty(document.select( "div.page-body"))){
+      content = document.select("div.page-body");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+
+  private List<String> findPRESSCategories(Document document, String domain) {
+    Elements titles = null;
+    if(!ObjectUtils.isEmpty(document.select( "div.page-title"))){
+      titles = document.select("div.page-title");
+     return titles.stream()
+          .filter(Element::hasText)
+          .map(Element::text)
+          .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
+  }
+
+  private String findHUSContent(Document document, String domain) {
+    Elements content = null;
+
+    if(!ObjectUtils.isEmpty(document.select( "div.news-details"))){
+      content = document.select("div.news-details");
+      return content.first().text();
+    }
+
+    if(!ObjectUtils.isEmpty(document.select( "div.single-blog-content"))){
+      content = document.select("div.single-blog-content");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findHUSCategories(Document document, String domain) {
+    Elements titles = null;
+    if(!ObjectUtils.isEmpty(document.select( "ol.breadcrumb"))){
+      titles = document.select("ol.breadcrumb");
+      return titles.stream()
+          .filter(Element::hasText)
+          .map(Element::text)
+          .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
 
   private String findVJUContent(Document document, String domain) {
     return "";
@@ -356,20 +405,6 @@ public class VnuNewsScanner extends NewsScanner {
   private String findEDCContent(Document document, String domain) {
     return "";
   }
-
-  private String findHUSContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findPRESSContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findTTGDTCContent(Document document, String domain) {
-    return "";
-  }
-
-
 
   private String findITIContent(Document document, String domain) {
     return "";
@@ -528,15 +563,4 @@ public class VnuNewsScanner extends NewsScanner {
     return Collections.emptyList();
   }
 
-  private List<String> findHUSCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findPRESSCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findTTGDTCCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
 }
