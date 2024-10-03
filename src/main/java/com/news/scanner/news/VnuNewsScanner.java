@@ -107,13 +107,14 @@ public class VnuNewsScanner extends NewsScanner {
     @Override
     List<String> getSubDomain() {
        // return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
-        return List.of(HUS);
+        return List.of(EDC);
     }
 
     @Override
     protected List<String> getNoneCrawlLinks() {
         return List.of("https://vnu.edu.vn/home/?C151/N26741",
-                "https://vnu.edu.vn/home/?C151/N26846");
+                "https://vnu.edu.vn/home/?C151/N26846",
+                "https://vnu.edu.vn/home/?C151/N26845");
     }
 
   public void scanByUrl(Link rootLink) {
@@ -394,15 +395,39 @@ public class VnuNewsScanner extends NewsScanner {
     return Collections.emptyList();
   }
 
+  private String findEDCContent(Document document, String domain) {
+    Elements content = null;
+
+    if(!ObjectUtils.isEmpty(document.select( "div.panel-body"))){
+      content = document.select("div.panel-body");
+      return content.first().text();
+    }
+
+    if(!ObjectUtils.isEmpty(document.select( "div.container-fluid.text-center div.col-sm-8.text-left"))){
+      content = document.select("div.container-fluid.text-center div.col-sm-8.text-left");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findEDCCategories(Document document, String domain) {
+    Elements titles = null;
+    if(!ObjectUtils.isEmpty(document.select( "div.container-fluid div.col-sm-8 h1"))){
+      titles = document.select("div.container-fluid div.col-sm-8 h1");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
+  }
+
   private String findVJUContent(Document document, String domain) {
     return "";
   }
 
   private String findYSIPContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findEDCContent(Document document, String domain) {
     return "";
   }
 
@@ -559,8 +584,5 @@ public class VnuNewsScanner extends NewsScanner {
     return Collections.emptyList();
   }
 
-  private List<String> findEDCCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
 
 }
