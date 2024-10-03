@@ -22,6 +22,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 @Service
@@ -104,18 +106,45 @@ public class VnuNewsScanner extends NewsScanner {
     return categories.get(subDomain);
   }
 
-    @Override
-    List<String> getSubDomain() {
-       // return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
-        return List.of(EDC);
-    }
+  @Override
+  List<String> getSubDomain() {
+    // return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
+    return List.of(VNU);
+  }
 
-    @Override
-    protected List<String> getNoneCrawlLinks() {
-        return List.of("https://vnu.edu.vn/home/?C151/N26741",
-                "https://vnu.edu.vn/home/?C151/N26846",
-                "https://vnu.edu.vn/home/?C151/N26845");
-    }
+  @Override
+  protected List<String> getNoneCrawlLinks() {
+    return List.of("https://vnu.edu.vn/home/?C151/N26854/Vien-dam-bao-chat-luong-giao-duc.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26852/Vien-Tai-nguyen-va-Moi-truong.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26851/Vien-Quoc-te-Phap-ngu.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26850/Vien-Tran-Nhan-Tong.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26849/Vien-Vi-sinh-vat-va-Cong-nghe-sinh-hoc.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26848/Vien-Viet-Nam-hoc-va-Khoa-hoc-phat-trien.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26847/Vien-Cong-nghe-Thong-tin.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26846/Khoa-Y-Duoc.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26845/Khoa-Cac-khoa-hoc-lien-nganh.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26844/Khoa-Quoc-te.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26843/Khoa-Quan-tri-va-Kinh-doanh.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26842/Khoa-Luat.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26841/Truong-dai-hoc-Viet-Nhat.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26840/Truong-dai-hoc-Giao-duc.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26838/Truong-dai-hoc-Kinh-te.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26837/Truong-dai-hoc-Cong-nghe.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26836/Truong-dai-hoc-Ngoai-ngu.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26835/Truong-dai-hoc-Khoa-hoc-Xa-hoi-va-Nhan-van.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26832/Truong-dai-hoc-Khoa-hoc-Tu-nhien.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26831/THoNG-NHaT-TRONG-dA-DaNG.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26830/doI-SoNG-daI-HoC.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26829/BIeU-TuoNG-TRI-THuC.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26828/HoP-TaC-CuNG-PHaT-TRIeN.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26827/KHOA-HoC-Vi-CoNG-doNG.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26826/CHaT-LuoNG-HaNG-daU.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26825/KHoI-TaO-TuoNG-LAI.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26824/KHUoN-VIeN.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26823/THoNG-TIN-CHUNG.htm/page",
+        "https://vnu.edu.vn/home/?C151/N26821/DoNG-LiCH-Su.htm/page"
+        );
+  }
 
   public void scanByUrl(Link rootLink) {
     Optional<Document> documentOptional = getDocument(rootLink.getUrl(), chromeDriver);
@@ -123,14 +152,20 @@ public class VnuNewsScanner extends NewsScanner {
     documentOptional.ifPresent(document -> {
       Set<String> scanUrlSet = chromeDriver.findElements(By.tagName(NewsScanner.A_TAG))
           .stream()
-          .filter(aTag -> !ObjectUtils.isEmpty(aTag.getAttribute(NewsScanner.HREF)))
+          .filter(aTag -> {
+            try {
+              return !ObjectUtils.isEmpty(aTag.getAttribute(NewsScanner.HREF));
+            } catch (StaleElementReferenceException elementHasDisappeared) {
+              return false;
+            }
+          })
           .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("/en"))
           .filter(aTag -> aTag.getAttribute(NewsScanner.HREF).startsWith(rootLink.getDomain()))
           .filter(
               aTag -> !aTag.getAttribute(NewsScanner.HREF).contains("?fb")) // IS domain trash link
           .filter(aTag -> {
                 if (ObjectUtils.isEmpty(aTag.getAttribute(DATA_PARENT))) {
-                    return true;
+                  return true;
                 }
 
                 return !aTag.getAttribute(DATA_PARENT).startsWith("#");
@@ -144,10 +179,10 @@ public class VnuNewsScanner extends NewsScanner {
               .replace("/respond", "/"))
           .collect(Collectors.toSet());
 
-            scanUrlSet.forEach(scanUrl ->addDocumentCollectionForCrawl(scanUrl, rootLink.getDomain()));
-            saveNews(document, rootLink, newsRepository);
-        });
-    }
+      scanUrlSet.forEach(scanUrl -> addDocumentCollectionForCrawl(scanUrl, rootLink.getDomain()));
+      saveNews(document, rootLink, newsRepository);
+    });
+  }
 
   @Override
   List<String> findPageCategories(Document document, String domain) {
@@ -307,45 +342,44 @@ public class VnuNewsScanner extends NewsScanner {
     return Collections.emptyList();
   }
 
-    private String findUEBContent(Document document, String domain) {
-        Elements content = null;
+  private String findUEBContent(Document document, String domain) {
+    Elements content = null;
 
-        if(ObjectUtils.isEmpty(findUEBCategories(document, domain))) {
-            return "";
-        }
-
-        if(!ObjectUtils.isEmpty(document.select( "div.about-news-detail div.container"))){
-            content = document.select("div.about-news-detail div.container");
-            return content.first().text();
-        }
-
-        if(!ObjectUtils.isEmpty(document.select( "div.section.about-news-second div.container"))){
-            content = document.select("div.section.about-news-second div.container");
-            return content.first().text();
-        }
-
-
-        return "";
+    if (ObjectUtils.isEmpty(findUEBCategories(document, domain))) {
+      return "";
     }
 
-    private List<String> findUEBCategories(Document document, String domain) {
-        Elements titles = null;
-
-        if(!ObjectUtils.isEmpty(document.select( "li.breadcrumb-item.uebnavi a"))){
-            titles = document.select("li.breadcrumb-item.uebnavi a");
-            return titles.stream()
-                    .filter(Element::hasText)
-                    .map(Element::text)
-                    .collect(Collectors.toList());
-        }
-
-        return Collections.emptyList();
+    if (!ObjectUtils.isEmpty(document.select("div.about-news-detail div.container"))) {
+      content = document.select("div.about-news-detail div.container");
+      return content.first().text();
     }
+
+    if (!ObjectUtils.isEmpty(document.select("div.section.about-news-second div.container"))) {
+      content = document.select("div.section.about-news-second div.container");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findUEBCategories(Document document, String domain) {
+    Elements titles = null;
+
+    if (!ObjectUtils.isEmpty(document.select("li.breadcrumb-item.uebnavi a"))) {
+      titles = document.select("li.breadcrumb-item.uebnavi a");
+      return titles.stream()
+          .filter(Element::hasText)
+          .map(Element::text)
+          .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
 
   private String findPRESSContent(Document document, String domain) {
     Elements content = null;
 
-    if(!ObjectUtils.isEmpty(document.select( "div.page-body"))){
+    if (!ObjectUtils.isEmpty(document.select("div.page-body"))) {
       content = document.select("div.page-body");
       return content.first().text();
     }
@@ -356,9 +390,9 @@ public class VnuNewsScanner extends NewsScanner {
 
   private List<String> findPRESSCategories(Document document, String domain) {
     Elements titles = null;
-    if(!ObjectUtils.isEmpty(document.select( "div.page-title"))){
+    if (!ObjectUtils.isEmpty(document.select("div.page-title"))) {
       titles = document.select("div.page-title");
-     return titles.stream()
+      return titles.stream()
           .filter(Element::hasText)
           .map(Element::text)
           .collect(Collectors.toList());
@@ -369,12 +403,12 @@ public class VnuNewsScanner extends NewsScanner {
   private String findHUSContent(Document document, String domain) {
     Elements content = null;
 
-    if(!ObjectUtils.isEmpty(document.select( "div.news-details"))){
+    if (!ObjectUtils.isEmpty(document.select("div.news-details"))) {
       content = document.select("div.news-details");
       return content.first().text();
     }
 
-    if(!ObjectUtils.isEmpty(document.select( "div.single-blog-content"))){
+    if (!ObjectUtils.isEmpty(document.select("div.single-blog-content"))) {
       content = document.select("div.single-blog-content");
       return content.first().text();
     }
@@ -384,7 +418,7 @@ public class VnuNewsScanner extends NewsScanner {
 
   private List<String> findHUSCategories(Document document, String domain) {
     Elements titles = null;
-    if(!ObjectUtils.isEmpty(document.select( "ol.breadcrumb"))){
+    if (!ObjectUtils.isEmpty(document.select("ol.breadcrumb"))) {
       titles = document.select("ol.breadcrumb");
       return titles.stream()
           .filter(Element::hasText)
@@ -398,12 +432,13 @@ public class VnuNewsScanner extends NewsScanner {
   private String findEDCContent(Document document, String domain) {
     Elements content = null;
 
-    if(!ObjectUtils.isEmpty(document.select( "div.panel-body"))){
+    if (!ObjectUtils.isEmpty(document.select("div.panel-body"))) {
       content = document.select("div.panel-body");
       return content.first().text();
     }
 
-    if(!ObjectUtils.isEmpty(document.select( "div.container-fluid.text-center div.col-sm-8.text-left"))){
+    if (!ObjectUtils.isEmpty(
+        document.select("div.container-fluid.text-center div.col-sm-8.text-left"))) {
       content = document.select("div.container-fluid.text-center div.col-sm-8.text-left");
       return content.first().text();
     }
@@ -413,12 +448,12 @@ public class VnuNewsScanner extends NewsScanner {
 
   private List<String> findEDCCategories(Document document, String domain) {
     Elements titles = null;
-    if(!ObjectUtils.isEmpty(document.select( "div.container-fluid div.col-sm-8 h1"))){
+    if (!ObjectUtils.isEmpty(document.select("div.container-fluid div.col-sm-8 h1"))) {
       titles = document.select("div.container-fluid div.col-sm-8 h1");
       return titles.stream()
-              .filter(Element::hasText)
-              .map(Element::text)
-              .collect(Collectors.toList());
+          .filter(Element::hasText)
+          .map(Element::text)
+          .collect(Collectors.toList());
     }
     return Collections.emptyList();
   }

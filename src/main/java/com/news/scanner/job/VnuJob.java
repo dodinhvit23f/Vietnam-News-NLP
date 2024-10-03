@@ -22,8 +22,8 @@ public class VnuJob {
     @Scheduled(initialDelay = 1, fixedDelay = 1000000000L)
     //@Scheduled(cron = "0 0 1 * * *")
     public void runJob(){
-        log.info("Start scan vinmec: {}", Date.from(Instant.now()));
+        log.info("Start scan vnu: {}", Date.from(Instant.now()));
         vnuNewsScanner.scanWeb();
-        log.info("End scan vinmec: {}", Date.from(Instant.now()));
+        log.info("End scan vnu: {}", Date.from(Instant.now()));
     }
 }
