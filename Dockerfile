@@ -1,15 +1,22 @@
 # Use an official Maven image with OpenJDK 17
-FROM maven:3.8.1-openjdk-17
-RUN mvn clean install
-# Set working directory inside the container
+FROM maven:3.8.6-openjdk-18 AS build
+# Set the working directory in the container
 WORKDIR /app
-
+COPY . /app
 # Run Maven build
 
+FROM openjdk:18-jdk-bullseye
+WORKDIR /app
+ARG JAR_FILE=target/news-scanner-0.0.1-SNAPSHOT.jar
 
-#FROM openjdk:8-jdk-alpine
-#ARG JAR_FILE=target/news-scanner-0.0.1-SNAPSHOT.jar
+RUN apt-get update
+RUN apt-get install -y wget gnupg
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-keyring.gpg
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+RUN apt-get update
+RUN apt-get install -y google-chrome-stable
+RUN google-chrome --version
 
-#COPY chromedriver chromedriver
-#COPY ${JAR_FILE} app.jar
-#ENTRYPOINT ["java","-jar","/app.jar"]
+
+COPY --from=build /app/target/news-scanner-0.0.1-SNAPSHOT.jar .
+CMD ["java", "-jar", "news-scanner-0.0.1-SNAPSHOT.jar"]

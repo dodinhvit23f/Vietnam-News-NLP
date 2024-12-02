@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public abstract class NewsScanner {
 
     public static final String HREF = "href";
+    public static final String SPAN_TAG = "span";
     public static final String A_TAG = "a";
     protected List<String> nonDocument = List.of("jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp", "svg", "ico", "heif",
             "heic", "ics", "jfif");

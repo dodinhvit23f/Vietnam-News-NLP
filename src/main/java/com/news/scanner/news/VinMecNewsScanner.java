@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Service;
@@ -18,10 +19,7 @@ import org.springframework.util.ObjectUtils;
 import java.lang.reflect.Array;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -57,7 +55,11 @@ public class VinMecNewsScanner extends NewsScanner {
         addDocumentCollectionForCrawl(url, getBaseUrl());
 
         while (!queue.isEmpty()) {
-            scanByUrl(getQueueUrl());
+            try {
+                scanByUrl(getQueueUrl());
+            } catch (Exception e) {
+
+            }
         }
     }
 
@@ -115,7 +117,7 @@ public class VinMecNewsScanner extends NewsScanner {
                         .replace("/respond", "/"))
                 .collect(Collectors.toSet());
 
-        scanUrlSet =  scanUrlSet.stream()
+        scanUrlSet = scanUrlSet.stream()
                 .map(path -> {
                     if (!path.contains(PAGE)) {
                         return path;
@@ -218,11 +220,28 @@ public class VinMecNewsScanner extends NewsScanner {
             return;
         }
 
+        Set<String> categories = new HashSet<>();
+
+        if (!ObjectUtils.isEmpty(document.select(".bread-cump-main"))) {
+            categories = document.select(".bread-cump-main")
+                    .get(0)
+                    .children()
+                    .stream()
+                    .filter(element ->
+                            element.tag().getName().equals(NewsScanner.A_TAG) ||
+                                    element.tag().getName().equals(NewsScanner.SPAN_TAG))
+                    .map(Element::text)
+                    .map(text -> text.split(" > | - |, "))
+                    .flatMap(Arrays::stream)
+                    .collect(Collectors.toSet());
+        }
+
         News news = News.builder()
                 .title(document.title())
                 .url(url)
                 .domain(getDomain())
                 .content(Utilization.splitText(content, Utilization.getPunctuationForLanguage()))
+                .category(categories)
                 .createAt(ZonedDateTime.now(ZoneId.systemDefault()))
                 .build();
 
