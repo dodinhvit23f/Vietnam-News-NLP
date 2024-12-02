@@ -9,8 +9,16 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - app-network
   new-scanner:
     build:
       dockerfile: Dockerfile
     ports:
       - "8888:8080"
+    networks:
+      - app-network
+      -
+networks:
+  app-network:
+    driver: bridge

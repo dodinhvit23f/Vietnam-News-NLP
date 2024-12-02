@@ -9,7 +9,7 @@ spring:
       username: ${MONGO_DB_USER_NAME:root}
       database: ${MONGO_DB_NAME:news}
       password: ${MONGO_DB_PASSWORD:example}
-      host: ${MONGO_DB_HOST:127.0.0.1}
+      host: ${MONGO_DB_HOST:mongo}
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
       authentication-database: admin
 
