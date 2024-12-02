@@ -1,4 +1,3 @@
-/*
 
 package com.news.scanner.job;
 
@@ -30,4 +29,3 @@ public class VinMecJob {
     }
 }
 
-*/

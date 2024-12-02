@@ -1,3 +1,4 @@
+/*
 package com.news.scanner.news;
 
 import java.util.Collections;

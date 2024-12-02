@@ -115,6 +115,7 @@ public abstract class NewsScanner {
         try {
             chromeDriver.get(url);
             int retryTimes = 1000;
+            Thread.sleep(retryTimes);
             while (chromeDriver.getTitle().contains("Bad gateway")) {
                 retryTimes = retryTimes + 400 + (retryTimes / 100);
                 Thread.sleep(retryTimes);

@@ -1,3 +1,4 @@
+/*
 package com.news.scanner.job;
 
 import com.news.scanner.news.VnuNewsScanner;
@@ -29,3 +30,4 @@ public class UetJob {
 }
 
 
+*/

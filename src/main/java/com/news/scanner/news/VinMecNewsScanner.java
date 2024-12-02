@@ -10,16 +10,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
+import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.lang.reflect.Array;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class VinMecNewsScanner extends NewsScanner {
     public static final String PAGE = "?page=";
+    public static final String ENG = "/eng/";
     ChromeDriver chromeDriver;
     NewsRepository newsRepository;
 
@@ -48,7 +53,7 @@ public class VinMecNewsScanner extends NewsScanner {
     }
 
     public void scanWeb() {
-        String url = getBaseUrl().concat("/vi/");
+        String url = getBaseUrl().concat("/vie");
         addDocumentCollectionForCrawl(url, getBaseUrl());
 
         while (!queue.isEmpty()) {
@@ -82,8 +87,9 @@ public class VinMecNewsScanner extends NewsScanner {
         }
 
         String cutUrl = link.getUrl().split("\\?")[0];
+        Boolean willSave = Boolean.TRUE;
         if (newsRepository.findByUrl(cutUrl).isPresent()) {
-            return;
+            willSave = Boolean.FALSE;
         }
 
         log.info("scanning url: {}", cutUrl);
@@ -95,12 +101,53 @@ public class VinMecNewsScanner extends NewsScanner {
         Document document = documentOptional.get();
 
         Optional<News> news = newsRepository.findByUrl(cutUrl);
-        if (news.isEmpty()) {
-            saveNews(document, getVinMecUrl(chromeDriver.getCurrentUrl()));
+        if (news.isEmpty() && willSave && !cutUrl.equals(getBaseUrl())) {
+            saveNews(document, cutUrl);
         }
 
+        Set<String> scanUrlSet = chromeDriver.findElements(By.tagName(NewsScanner.A_TAG))
+                .stream()
+                .filter(aTag -> !ObjectUtils.isEmpty(aTag.getAttribute(NewsScanner.HREF)))
+                .filter(aTag -> !aTag.getAttribute(NewsScanner.HREF).contains(ENG))
+                .filter(aTag -> aTag.getAttribute(NewsScanner.HREF).startsWith(getBaseUrl()))
+                .map(aTag -> aTag.getAttribute(NewsScanner.HREF).strip()
+                        .replace("#", "")
+                        .replace("/respond", "/"))
+                .collect(Collectors.toSet());
 
-        Set<String> scanUrlSet = document.select(NewsScanner.A_TAG)
+        scanUrlSet =  scanUrlSet.stream()
+                .map(path -> {
+                    if (!path.contains(PAGE)) {
+                        return path;
+                    }
+
+                    String[] currentUrlPath = cutUrl.split("\\?page=");
+                    String[] urlPath = path.split("\\?page=");
+
+                    if (currentUrlPath.length == 2 &&
+                            urlPath.length == 2 &&
+                            Integer.parseInt(currentUrlPath[1]) < Integer.parseInt(urlPath[1])) {
+                        return currentUrlPath[0].concat(path);
+                    }
+
+                    return null;
+                })
+                .filter(linkExtract -> !ObjectUtils.isEmpty(linkExtract))
+                .map(path -> {
+                    String[] arrayUrl = path.split("/");
+                    String firstElement = arrayUrl[0];
+
+                    StringBuilder result = new StringBuilder();
+                    result.append(firstElement);
+
+                    for (int i = 1; i < arrayUrl.length; i++) {
+                        result.append("/").append(arrayUrl[i]);
+                    }
+
+                    return result.toString();
+                }).collect(Collectors.toSet());
+
+      /*  Set<String> scanUrlSet = document.select(NewsScanner.A_TAG)
                 .stream()
                 .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
                 .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
@@ -130,7 +177,7 @@ public class VinMecNewsScanner extends NewsScanner {
                 .stream()
                 .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
                 .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith("/"))
-                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
+                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains(ENG))
                 .map(aTag -> aTag.attribute(NewsScanner.HREF).getValue().strip())
                 .filter(path -> !ObjectUtils.isEmpty(path) && path.length() > 1)
                 .map(path -> getVinMecUrl(getBaseUrl().concat(path)))
@@ -139,10 +186,10 @@ public class VinMecNewsScanner extends NewsScanner {
         scanUrlSet.addAll(document.select(NewsScanner.A_TAG)
                 .stream()
                 .filter(aTag -> aTag.hasAttr(NewsScanner.HREF))
-                .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith("https://www.vinmec.com"))
-                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains("/en/"))
+                .filter(aTag -> aTag.attribute(NewsScanner.HREF).getValue().startsWith(getBaseUrl()))
+                .filter(aTag -> !aTag.attribute(NewsScanner.HREF).getValue().contains(ENG))
                 .map(aTag -> getVinMecUrl(aTag.attribute(NewsScanner.HREF).getValue()))
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet()));*/
 
         scanUrlSet.forEach(link1 -> addDocumentCollectionForCrawl(link1, link.getDomain()));
     }
@@ -164,7 +211,7 @@ public class VinMecNewsScanner extends NewsScanner {
         }
 
         if (ObjectUtils.isEmpty(content)) {
-            content = document.select(".container_body").text();
+            content = document.select(".container_body.margin-auto").text();
         }
 
         if (ObjectUtils.isEmpty(content)) {
