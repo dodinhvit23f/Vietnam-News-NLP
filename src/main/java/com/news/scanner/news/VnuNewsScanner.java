@@ -622,3 +622,4 @@ public class VnuNewsScanner extends NewsScanner {
 
 
 }
+*/
