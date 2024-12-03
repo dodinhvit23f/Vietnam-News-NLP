@@ -93,6 +93,7 @@ public class ApplicationConfiguration {
         options.addArguments("--disable-dev-shm-usage"); //https://stackoverflow.com/a/50725918/1689770
         options.addArguments("enable-automation"); // https://stackoverflow.com/a/43840128/1689770
         options.addArguments("--disable-infobars"); // https://stackoverflow.com/a/43840128/1689770
+        options.addArguments("--headless");
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
 
         return options;
