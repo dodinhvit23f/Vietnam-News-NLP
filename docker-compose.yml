@@ -18,6 +18,8 @@ services:
       - "8888:8080"
     networks:
       - app-network
+    depends_on:
+      - mongo
 networks:
   app-network:
     driver: bridge
