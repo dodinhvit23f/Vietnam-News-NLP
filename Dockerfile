@@ -19,4 +19,5 @@ RUN google-chrome --version
 
 
 COPY --from=build /app/target/news-scanner-0.0.1-SNAPSHOT.jar .
+COPY --from=build /app/chromedriver  .
 CMD ["java", "-jar", "news-scanner-0.0.1-SNAPSHOT.jar"]
