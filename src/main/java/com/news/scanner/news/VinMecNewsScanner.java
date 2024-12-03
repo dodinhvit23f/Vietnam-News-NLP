@@ -58,7 +58,7 @@ public class VinMecNewsScanner extends NewsScanner {
             try {
                 scanByUrl(getQueueUrl());
             } catch (Exception e) {
-
+                log.error(e.getMessage());
             }
         }
     }
