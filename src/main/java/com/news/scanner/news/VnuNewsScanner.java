@@ -1,4 +1,3 @@
-/*
 package com.news.scanner.news;
 
 import java.util.Collections;
@@ -14,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -24,13 +24,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Slf4j
+@Profile("vnu")
 public class VnuNewsScanner extends NewsScanner {
 
   public static final String IS = "https://www.is.vnu.edu.vn/";
@@ -109,8 +109,8 @@ public class VnuNewsScanner extends NewsScanner {
 
   @Override
   List<String> getSubDomain() {
-    // return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
-    return List.of(VNU);
+     return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
+    //return List.of(VNU);
   }
 
   @Override
@@ -622,4 +622,3 @@ public class VnuNewsScanner extends NewsScanner {
 
 
 }
-*/

@@ -1,4 +1,3 @@
-/*
 package com.news.scanner.job;
 
 import com.news.scanner.news.VnuNewsScanner;
@@ -6,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +16,7 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor
 @Slf4j
+@Profile("uet")
 public class UetJob {
 
     VnuNewsScanner vnuNewsScanner;
@@ -30,4 +31,3 @@ public class UetJob {
 }
 
 
-*/

@@ -5,6 +5,7 @@ import com.news.scanner.converter.ZonedDateTimeToDateTimeConverter;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
@@ -14,22 +15,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.ResourceUtils;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.netty.http.client.HttpClient;
+
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
+@Slf4j
 @Configuration
 public class ApplicationConfiguration {
 
-    @Bean
+  /*  @Bean
     WebClient webClient(HttpClient httpClient) {
         final int size = 16 * 1024 * 1024;
         final ExchangeStrategies strategies = ExchangeStrategies.builder()
@@ -51,13 +52,14 @@ public class ApplicationConfiguration {
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS))
                                 .addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
-    }
+    }*/
 
     @Value("${application.chrome}")
     String pathToChrome;
 
     @Bean
     ChromeDriverService webDriverBrowser() throws FileNotFoundException {
+        log.info("Loading chrome driver service");
         return new ChromeDriverService.Builder()
                 .usingDriverExecutable(ResourceUtils.getFile(pathToChrome))
                 .build();
@@ -80,12 +82,13 @@ public class ApplicationConfiguration {
         options.addArguments("--disable-extensions");
         // options.addArguments("--disable-security");
         options.addArguments("--no-sandbox");
-        //// options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--allow-running-insecure-content");
         // đặt định dạng tiếng việt
         options.addArguments("accept-language=vi");
         // tránh nhận dạnh của các trang web là trình duyệt tự động.
         options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("--disable-backgrounding-occluded-windows");
+        options.addArguments("--window-size=1280,1024");
         //options.add_experimental_option("excludeSwitches", ["enable-automation"])
         //options.add_experimental_option('useAutomationExtension', False);
         options.addArguments("--disable-gpu"); //https://stackoverflow.com/questions/51959986/how-to-solve-selenium-chromedriver-timed-out-receiving-message-from-renderer-exc
@@ -101,9 +104,10 @@ public class ApplicationConfiguration {
 
     @Bean
     ChromeDriver chromeDriver(ChromeDriverService service, ChromeOptions chromeOptions) {
+        log.info("Loading chrome driver");
         ChromeDriver driver = new ChromeDriver(service, chromeOptions);
         driver.manage().window().maximize();
-        driver.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+       // driver.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
         driver.manage().timeouts().pageLoadTimeout(3, TimeUnit.SECONDS);
         return driver;
     }
