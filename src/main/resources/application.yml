@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8080
 spring:
   application:
     name: news-scanner
@@ -9,9 +9,11 @@ spring:
       username: ${MONGO_DB_USER_NAME:root}
       database: ${MONGO_DB_NAME:news}
       password: ${MONGO_DB_PASSWORD:example}
-      host: ${MONGO_DB_HOST:mongo}
+      host: ${MONGO_DB_HOST:localhost}
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
       authentication-database: admin
+  profiles:
+    active: vnu
 
 application:
   chrome: ./chromedriver
