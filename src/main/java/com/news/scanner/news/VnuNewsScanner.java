@@ -41,7 +41,7 @@ public class VnuNewsScanner extends NewsScanner {
   public static final String EDC = "https://education.vnu.edu.vn/";
   public static final String YSIP = "https://ysip.vnu.edu.vn/";
   public static final String VJU = "https://vju.ac.vn/";
-  public static final String ITI = "https://iti.vnu.edu.vn/vi/";
+  public static final String ITI = "https://iti.vnu.edu.vn/";
   public static final String HSB = "https://hsb.edu.vn/";
   public static final String TNTI = "https://tnti.vnu.edu.vn/";
   public static final String ULIS = "https://ulis.vnu.edu.vn/";
@@ -109,41 +109,14 @@ public class VnuNewsScanner extends NewsScanner {
 
   @Override
   List<String> getSubDomain() {
-     return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
-    //return List.of(VNU);
+     //return List.of(IS, VNU, UEB, PRESS, HUS, EDC, YSIP, VJU, ITI, HSB, TNTI, ULIS, UMP, ALUMNI, LAW, SIS, CEA, HDC, CMC, USSH, IMBT, INFEQA, CET, IDIDES, CSS, IFI);
+    return List.of(ITI);
   }
 
   @Override
   protected List<String> getNoneCrawlLinks() {
-    return List.of("https://vnu.edu.vn/home/?C151/N26854/Vien-dam-bao-chat-luong-giao-duc.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26852/Vien-Tai-nguyen-va-Moi-truong.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26851/Vien-Quoc-te-Phap-ngu.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26850/Vien-Tran-Nhan-Tong.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26849/Vien-Vi-sinh-vat-va-Cong-nghe-sinh-hoc.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26848/Vien-Viet-Nam-hoc-va-Khoa-hoc-phat-trien.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26847/Vien-Cong-nghe-Thong-tin.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26846/Khoa-Y-Duoc.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26845/Khoa-Cac-khoa-hoc-lien-nganh.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26844/Khoa-Quoc-te.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26843/Khoa-Quan-tri-va-Kinh-doanh.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26842/Khoa-Luat.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26841/Truong-dai-hoc-Viet-Nhat.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26840/Truong-dai-hoc-Giao-duc.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26838/Truong-dai-hoc-Kinh-te.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26837/Truong-dai-hoc-Cong-nghe.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26836/Truong-dai-hoc-Ngoai-ngu.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26835/Truong-dai-hoc-Khoa-hoc-Xa-hoi-va-Nhan-van.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26832/Truong-dai-hoc-Khoa-hoc-Tu-nhien.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26831/THoNG-NHaT-TRONG-dA-DaNG.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26830/doI-SoNG-daI-HoC.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26829/BIeU-TuoNG-TRI-THuC.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26828/HoP-TaC-CuNG-PHaT-TRIeN.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26827/KHOA-HoC-Vi-CoNG-doNG.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26826/CHaT-LuoNG-HaNG-daU.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26825/KHoI-TaO-TuoNG-LAI.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26824/KHUoN-VIeN.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26823/THoNG-TIN-CHUNG.htm/page",
-        "https://vnu.edu.vn/home/?C151/N26821/DoNG-LiCH-Su.htm/page"
+    return List.of("https://vnu.edu.vn/home/?C151/",
+            "https://iti.vnu.edu.vn/mediawiki"
         );
   }
 
@@ -388,7 +361,6 @@ public class VnuNewsScanner extends NewsScanner {
     return "";
   }
 
-
   private List<String> findPRESSCategories(Document document, String domain) {
     Elements titles = null;
     if (!ObjectUtils.isEmpty(document.select("div.page-title"))) {
@@ -456,169 +428,519 @@ public class VnuNewsScanner extends NewsScanner {
           .map(Element::text)
           .collect(Collectors.toList());
     }
+
     return Collections.emptyList();
   }
 
   private String findVJUContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("main#content"))) {
+      content = document.select("main#content");
+      return content.first().text();
+    }
+
     return "";
+  }
+
+  private List<String> findVJUCategories(Document document, String domain) {
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("div.elementor-widget-container h2"))) {
+      titles = document.select("div.elementor-widget-container h2");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
   }
 
   private String findYSIPContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("div.newsdetail-wrapper"))) {
+      content = document.select("div.newsdetail-wrapper");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div.educatedetail-wrapper"))) {
+      content = document.select("div.educatedetail-wrapper");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div.grid"))) {
+      content = document.select("div.grid");
+      return content.first().text();
+    }
+
     return "";
+  }
+
+  private List<String> findYSIPCategories(Document document, String domain) {
+
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("div.crumb a"))) {
+      titles = document.select("div.crumb a");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
   }
 
   private String findITIContent(Document document, String domain) {
+
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("main#main"))) {
+      content = document.select("main#main");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("main#wrapper"))) {
+      content = document.select("main#wrapper");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("main#content"))) {
+      content = document.select("main#content");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#mw-page-container"))) {
+      content = document.select("div#mw-page-container");
+      return content.first().text();
+    }
+
     return "";
+  }
+
+  private List<String> findITICategories(Document document, String domain) {
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("nav#breadcrumbs-1 a"))) {
+      titles = document.select("nav#breadcrumbs-1 a");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
   }
 
   private String findHSBContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("div#kingster-page-wrapper"))) {
+      content = document.select("div#kingster-page-wrapper");
+      return content.first().text();
+    }
+
     return "";
+  }
+
+  private List<String> findHSBCategories(Document document, String domain) {
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("header#kingster-single-article-head"))) {
+      titles = document.select("header#kingster-single-article-head");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
   }
 
   private String findTNTIContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("div.article-inner"))) {
+      content = document.select("div.article-inner");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("main#main"))) {
+      content = document.select("main#main");
+      return content.first().text();
+    }
+
     return "";
-  }
-
-  private String findULISContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findUMPContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findALUMNIContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findLAWContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findSISContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findCEAContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findHDCContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findCMCContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findUSSHContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findIMBTContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findINFEQAContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findCETContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findIDIDESContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findCSSContent(Document document, String domain) {
-    return "";
-  }
-
-  private String findIFIContent(Document document, String domain) {
-    return "";
-  }
-
-
-  private List<String> findIFICategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findCSSCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findIDIDESCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findCETCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findINFEQACategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findIMBTCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findUSSHCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findCMCCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findHDCCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findCEACategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findSISCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findLAWCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findALUMNICategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findUMPCategories(Document document, String domain) {
-    return Collections.emptyList();
-  }
-
-  private List<String> findULISCategories(Document document, String domain) {
-    return Collections.emptyList();
   }
 
   private List<String> findTNTICategories(Document document, String domain) {
     return Collections.emptyList();
   }
 
-  private List<String> findHSBCategories(Document document, String domain) {
+  private String findULISContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("div.post-content"))) {
+      content = document.select("div.post-content");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("section.container"))) {
+      content = document.select("section.container");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findULISCategories(Document document, String domain) {
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("div#crumbs span"))) {
+      titles = document.select("div#crumbs span");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
     return Collections.emptyList();
   }
 
-  private List<String> findITICategories(Document document, String domain) {
+  private String findALUMNIContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("div#page"))) {
+      content = document.select("div#page");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findALUMNICategories(Document document, String domain) {
+
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("div.crumb a"))) {
+      titles = document.select("div.crumb a");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
     return Collections.emptyList();
   }
 
-  private List<String> findVJUCategories(Document document, String domain) {
+  private String findSISContent(Document document, String domain) {
+
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("main#main"))) {
+      content = document.select("main#main");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#wrapper"))) {
+      content = document.select("div#wrapper");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findSISCategories(Document document, String domain) {
+
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select(" h6.entry-category.is-xsmall"))) {
+      titles = document.select(" h6.entry-category.is-xsmall");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
     return Collections.emptyList();
   }
 
-  private List<String> findYSIPCategories(Document document, String domain) {
+  private String findCEAContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("body"))) {
+      content = document.select("body");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findCEACategories(Document document, String domain) {
     return Collections.emptyList();
   }
 
+  private String findHDCContent(Document document, String domain) {
+    Elements content = null;
+    if (!ObjectUtils.isEmpty(document.select("div.boxed"))) {
+      content = document.select("div.boxed");
+      return content.first().text();
+    }
+
+
+    if (!ObjectUtils.isEmpty(document.select("div.flat-row"))) {
+      content = document.select("div.flat-row");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div.container"))) {
+      content = document.select("div.container");
+      return content.first().text();
+    }
+
+
+
+
+
+    return "";
+  }
+
+  private List<String> findHDCCategories(Document document, String domain) {
+
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("h4.widget-title"))) {
+      titles = document.select("h4.widget-title");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  private String findCMCContent(Document document, String domain) {
+
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("form div.container.clearfix"))) {
+      content = document.select("form div.container.clearfix");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("body"))) {
+      content = document.select("body");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findCMCCategories(Document document, String domain) {
+    Elements titles = null;
+
+    if (!ObjectUtils.isEmpty(document.select("div.entry-title"))) {
+      titles = document.select("div.entry-title");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div.container h1"))) {
+      titles = document.select("div.container h1");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  private String findUSSHContent(Document document, String domain) {
+
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("section#body"))) {
+      content = document.select("section#body");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div.section-body"))) {
+      content = document.select("div.section-body");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findUSSHCategories(Document document, String domain) {
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("div.breadcrumbs-wrap div.display a"))) {
+      titles = document.select("div.breadcrumbs-wrap div.display a");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("ul.breadcrumbs li"))) {
+      titles = document.select("ul.breadcrumbs li");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  private String findIMBTContent(Document document, String domain) {
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("section.wprt-section"))) {
+      content = document.select("section.wprt-section");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#main-content"))) {
+      content = document.select("div#main-content");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#wrapper"))) {
+      content = document.select("div#wrapper");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#main-content"))) {
+      content = document.select("div#main-content");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findIMBTCategories(Document document, String domain) {
+    return Collections.emptyList();
+  }
+
+  private String findINFEQAContent(Document document, String domain) {
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("div.platform-content.container"))) {
+      content = document.select("div.platform-content.container");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("main#g-main"))) {
+      content = document.select("main#g-main");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#g-page-surround"))) {
+      content = document.select("div#g-page-surround");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findINFEQACategories(Document document, String domain) {
+
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("li.mod-breadcrumbs__item a"))) {
+      titles = document.select("li.mod-breadcrumbs__item a");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  private String findCETContent(Document document, String domain) {
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("div#introduce-layout"))) {
+      content = document.select("div#introduce-layout");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div#print-section"))) {
+      content = document.select("div#print-section");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findCETCategories(Document document, String domain) {
+    return Collections.emptyList();
+  }
+
+  private String findIDIDESContent(Document document, String domain) {
+
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("section"))) {
+      content = document.select("section");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("div.body-bg"))) {
+      content = document.select("div.body-bg");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findIDIDESCategories(Document document, String domain) {
+    return Collections.emptyList();
+  }
+
+  private String findIFIContent(Document document, String domain) {
+    Elements content = null;
+
+    if (!ObjectUtils.isEmpty(document.select("div.panel-body.fix-panel-body-ifi"))) {
+      content = document.select("div.panel-body.fix-panel-body-ifi");
+      return content.first().text();
+    }
+
+    if (!ObjectUtils.isEmpty(document.select("section"))) {
+      content = document.select("section");
+      return content.first().text();
+    }
+
+    return "";
+  }
+
+  private List<String> findIFICategories(Document document, String domain) {
+
+    Elements titles = null;
+    if (!ObjectUtils.isEmpty(document.select("ol.breadcrumb li"))) {
+      titles = document.select("ol.breadcrumb li");
+      return titles.stream()
+              .filter(Element::hasText)
+              .map(Element::text)
+              .collect(Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  // low internet
+  private String findLAWContent(Document document, String domain) {
+    return "";
+  }
+
+  private List<String> findLAWCategories(Document document, String domain) {
+    return Collections.emptyList();
+  }
+
+  private String findUMPContent(Document document, String domain) {
+    return "";
+  }
+
+  private List<String> findUMPCategories(Document document, String domain) {
+    return Collections.emptyList();
+  }
+
+  private String findCSSContent(Document document, String domain) {
+    return "";
+  }
+
+  private List<String> findCSSCategories(Document document, String domain) {
+    return Collections.emptyList();
+  }
 
 }
